@@ -1,0 +1,264 @@
+const dotenv = require("dotenv");
+dotenv.config({path:__dirname+ '/../../../.env'});
+
+let COMMON = {
+    rewardWallet: "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341",
+}
+
+let ARBITRUM = {
+    // tokens
+    usdc: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+    usdt: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+    dai: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    aDai: "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE",
+    wbtc: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+    weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    // aave
+    aaveProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+    rewardsController: "0x929EC64c34a17401F460460D4B9390518E5B473e",
+    aUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+    // swaps
+    uniswapV3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    gmxRouter: "0xaBBc5F99639c9B6bCb58544ddf04EFA6802F4064",
+    // oracles
+    oracleUsdc: "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3",
+    oracleUsdt: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+    oracleDai: "0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB",
+    oracleWbtc: "0xd0C7101eACbB49F3deCcCc166d238410D6D46d57",
+    oracleWeth: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+}
+
+let AVALANCHE = {
+    traderJoeRouter: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4",
+    platypus: "0x66357dCaCe80431aee0A7507e2E361B7e2402370",
+    usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+    usdce: "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664",
+    aUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+    aaveProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+    wAvax: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+}
+
+let BSC = {
+    // coins
+    usdPlus: "0xe80772Eaf6e2E18B651F160Bc9158b2A5caFCA65",
+    wBnb: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    busd: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+    usdt: "0x55d398326f99059fF775485246999027B3197955",
+    tusd: "0x14016E85a25aeb13065688cAFB43044C2ef86784",
+    cone: "0xa60205802e1b5c6ec1cafa3cacd49dfeece05ac9",
+    xvs: "0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63",
+    // venus
+    unitroller: "0xfD36E2c2a6789Db23113685031d7F16329158384",
+    maximillion: '0x5efA1e46F4Fd738FF721F5AebC895b970F13E8A1',
+    vBnb: "0xA07c5b74C9B40447a954e1466938b865b6BBea36",
+    vBusd: "0x95c78222B3D6e262426483D42CfA53685A67Ab9D",
+    vUsdc: "0xecA88125a5ADbe82614ffC12D0DB554E2e2867C8",
+    vUsdt: "0xfD5840Cd36d94D7229439859C0112a4185BC0255",
+    // swaps
+    pancakeRouter: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+    synapseStableSwapPool: '0x28ec0B36F0819ecB5005cAB836F4ED5a2eCa4D13',
+    wombatRouter: '0x19609B03C976CCA288fbDae5c21d4290e9a4aDD7',
+    wombatPool: '0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0',
+    // oracles
+    chainlinkBusd: "0xcBb98864Ef56E9042e7d2efef76141f15731B82f",
+    chainlinkUsdc: "0x51597f405303C4377E36123cBc172b13269EA163",
+    chainlinkUsdt: "0xB97Ad0E74fa7d920791E90258A6E2085088b4320",
+    chainlinkTusd: "0xa3334A9762090E827413A7495AfeCE76F41dFc06",
+    chainlinkWbnb: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
+}
+
+let OPTIMISM = {
+    // tokens
+    usdPlus: "0x73cb180bf0521828d8849bc8CF2B920918e23032",
+    op: "0x4200000000000000000000000000000000000042",
+    sonne: "0x1DB2466d9F5e10D7090E7152B68d62703a2245F0",
+    dai: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    wbtc: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+    usdt: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+    weth: "0x4200000000000000000000000000000000000006",
+    usdc: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
+    susd: "0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9",
+    lusd: "0xc40F949F8a4e094D1b49a23ea9241D289B7b2819",
+    velo: "0x3c8B650257cFb5f272f799F5e2b4e65093a11a05",
+    wstEth: "0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb",
+    // aave
+    aaveProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+    rewardsController: "0x929EC64c34a17401F460460D4B9390518E5B473e",
+    aUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+    aDai: "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE",
+    aWbtc: "0x078f358208685046a11C85e8ad32895DED33A249",
+    // sonne
+    unitroller: "0x60CF091cD3f50420d50fD7f707414d0DF4751C58",
+    soOp: "0x8cD6b19A07d754bF36AdEEE79EDF4F2134a8F571",
+    soUsdc: "0xEC8FEa79026FfEd168cCf5C627c7f486D77b765F",
+    soDai: "0x5569b83de187375d43FBd747598bfe64fC8f6436",
+    soSusd: "0xd14451E0Fa44B18f08aeB1E4a4d092B823CaCa68",
+    soLusd: "0xAFdf91f120DEC93c65fd63DBD5ec372e5dcA5f82",
+    // granary
+    granaryProvider: '0xdDE5dC81e40799750B92079723Da2acAF9e1C6D6',
+    // swaps
+    uniswapV3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    velodromeRouter: '0x9c12939390052919af3155f41bf4160fd3666a6f',
+    curveExchange: "0x22D710931F01c1681Ca1570Ff016eD42EB7b7c2a",
+    curve3Pool: "0x1337BedC9D22ecbe766dF105c9623922A27963EC",
+    inchRouter: "0x1111111254760F7ab3F16433eea9304126DCd199",
+    kyberSwapRouter: "0xC1e7dFE73E1598E3910EF4C7845B68A9Ab6F4c83",
+    // oracles
+    oracleDai: "0x8dBa75e83DA73cc766A7e5a0ee71F656BAb470d6",
+    oracleUsdt: "0xecef79e109e997bca29c1c0897ec9d7b03647f5e",
+    oracleUsdc: "0x16a9FA2FDa030272Ce99B29CF780dFA30361E0f3",
+    oracleWeth: "0x13e3ee699d1909e989722e753853ae30b17e08c5",
+    oracleOp: '0x0D276FC14719f9292D5C1eA2198673d1f4269246',
+    oracleSusd: '0x7f99817d87baD03ea21E05112Ca799d715730efe',
+    oracleLusd: '0x9dfc79Aaeb5bb0f96C6e9402671981CdFc424052',
+}
+
+let FANTOM = {
+    usdc: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75",
+    amUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+    crv2Pool: "0x27E611FD27b276ACbd5Ffd632E5eAEBEC9761E40",
+    crv2PoolToken: "0x27E611FD27b276ACbd5Ffd632E5eAEBEC9761E40",
+    crv2PoolGauge: "0x8866414733F22295b7563f9C5299715D2D76CAf4",
+    crvGeist: "0x0fa949783947Bf6c1b171DB13AEACBB488845B3f",
+    crvGeistToken: "0xD02a30d33153877BC20e5721ee53DeDEE0422B2F",
+    crvGeistGauge: "0xd4F94D0aaa640BBb72b5EEc2D85F6D114D81a88E",
+    geist: "0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d",
+    crv: "0x1E4F97b9f9F913c46F1632781732927B9019C68b",
+    wFtm: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+    tarotRouter: "0x283e62CFe14b352dB8e30A9575481DCbf589Ad98",
+    bTarotSpirit: "0x710675A9c8509D3dF254792C548555D3D0a69494",
+    bTarotSpooky: "0xb7FA3710A69487F37ae91D74Be55578d1353f9df",
+    tUsdc: "0x68d211Bc1e66814575d89bBE4F352B4cdbDACDFb",
+    tarotSupplyVaultRouter: "0x3E9F34309B2f046F4f43c0376EFE2fdC27a10251",
+    dei: "0xde12c7959e1a72bbe8a5f7a1dc8f8eef9ab011b3",
+    bptDeiUsdc: "0x8B858Eaf095A7337dE6f9bC212993338773cA34e",
+    asUsdc: "0xb5E4D17FFD9D0DCE46D290750dad5F9437B5A16B",
+    bptUsdcAsUSDC: "0x8Bb1839393359895836688165f7c5878f8C81C5e",
+    beets: "0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e",
+    deus: "0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44",
+    aaveProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+    spookySwapRouter: "0xF491e7B69E4244ad4002BC14e878a34207E38c29",
+    beethovenxVault: "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce",
+    beethovenxMasterChef: "0x8166994d9ebBe5829EC86Bd81258149B87faCfd3",
+    creamTokenAndDelegator: "0x328A7b4d538A2b3942653a9983fdA3C12c571141",
+    screamTokenDelegator: "0xE45Ac34E528907d0A0239ab5Db507688070B20bf",
+    screamUnitroller: "0x260E596DAbE3AFc463e75B6CC05d8c46aCAcFB09",
+    scream: "0xe0654C8e6fd4D733349ac7E09f6f23DA256bF475",
+    spookySwapLPMaiUsdc: "0x4dE9f0ED95de2461B6dB1660f908348c42893b1A",
+    spookySwapLPTusdUsdc: "0x12692B3bf8dd9Aa1d2E721d1a79efD0C244d7d96",
+    spookySwapMasterChef: "0x2b2929E785374c651a81A63878Ab22742656DcDd",
+    mai: "0xfB98B335551a418cD0737375a2ea0ded62Ea213b",
+    tusd: "0x9879aBDea01a879644185341F7aF7d8343556B7a",
+    boo: "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE",
+    wigo: "0xE992bEAb6659BFF447893641A378FbbF031C5bD6",
+    dai: "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
+    fusdt: "0x049d68029688eAbF473097a2fC38ef61633A3C7A",
+    WigoRouter: "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0",
+    WigoLPUsdcDai: "0xFDc67A84C3Aa2430c024B7d35B3c09872791d722",
+    WigoLPUsdcFUsdt: "0x219eF2d8DaD28a72dA297E79ed6a990F65307a4C",
+    WigoMasterFarmer: "0xA1a938855735C0651A6CfE2E93a32A28A236d0E9",
+}
+
+let POLYGON = {
+    // tokens
+    usdPlus: "0x236eeC6359fb44CCe8f97E99387aa7F8cd5cdE1f",
+    idleUsdc: "0x1ee6470cd75d5686d0b2b90c0305fa46fb0c89a1",
+    usdc: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    wbtc: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+    mai: "0xa3Fa99A148fA48D14Ed51d610c367C61876997F1",
+    wmatic: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+    usdt: "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+    dai: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+    tusd: "0x2e1AD108fF1D8C782fcBbB89AAd783aC49586756",
+    amUsdc: "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+    am3CRV: "0xE7a24EF0C5e95Ffb0f6684b813A78F2a3AD7D171",
+    am3CRVgauge: "0x19793B454D3AfC7b454F206Ffe95aDE26cA6912c",
+    wMatic: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+    crv: "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
+    mUsd: "0xE840B73E5287865EEc17d250bFb1536704B43B21",
+    imUsd: "0x5290Ad3d83476CA6A2b178Cd9727eE1EF72432af",
+    vimUsd: "0x32aBa856Dc5fFd5A56Bcd182b13380e5C855aa29",
+    mta: "0xf501dd45a1198c2e1b5aef5314a68b9006d842e0",
+    bpspTUsd: "0x0d34e5dD4D8f043557145598E4e2dC286B35FD4f",
+    tUsd: "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756",
+    bal: "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+    izi: "0x60d01ec2d5e98ac51c8b4cf84dfcce98d527c747",
+    yin: "0x794Baab6b878467F93EF17e2f2851ce04E3E34C8",
+    weth: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+    dodo: "0xe4Bf2864ebeC7B7fDf6Eeca9BaCAe7cDfDAffe78",
+    // swap routers
+    quickSwapRouter: "0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+    synapseSwapRouter: "0x85fCD7Dd0a1e1A9FCD5FD886ED522dE8221C3EE5",
+    uniswapV3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    inchRouter: "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+    // strategies params
+    crvAavePool: "0x445FE580eF8d70FF569aB36e80c647af338db351",
+    aaveProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+    balancerVault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+    merkleOrchard: "0x0F3e0c4218b7b0108a3643cFe9D3ec0d4F57c54e",
+    balancerPoolIdUsdcTusdDaiUsdt: "0x0d34e5dd4d8f043557145598e4e2dc286b35fd4f000000000000000000000068",
+    balancerPoolIdWmaticUsdcWethBal: "0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002",
+    balancerPoolIdWmaticMtaWeth: "0x614b5038611729ed49e0ded154d8a5d3af9d1d9e00010000000000000000001d",
+    uniswapV3PositionManager: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+    uniswapV3Pool: "0x3F5228d0e7D75467366be7De2c31D0d098bA2C23",
+    izumiBoost: "0x01cc44fc1246d17681b325926865cdb6242277a5",
+    uniswapNftToken: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    aaveCurve: "0x445fe580ef8d70ff569ab36e80c647af338db351",
+    impermaxRouter: "0x7c79a1c2152665273ebd50e9e88d92a887a83ba0",
+    imxbTokenQsUsdcUsdt: "0xEaB52C4eFBbB54505EB3FC804A29Dcf263668965",
+    imxbTokenQsMaticUsdt: "0xed618c29abc8fa6ee05b33051b3cdb4a1efb7924",
+    imxbTokenQsWethUsdt: "0x64ce3e18c091468acf30bd861692a74ce48a0c7c",
+    imxbTokenQsMaiUsdt: "0x0065A0effbb58e4BeB2f3A40fDcA740F85585213",
+    tetu: "0x255707B70BF90aa112006E1b07B9AeA6De021424",
+    arrakisRouter: "0xbc91a120ccd8f80b819eaf32f0996dac3fa76a6c",
+    // oracles
+    oracleChainlinkUsdc: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
+    oracleChainlinkUsdt: "0x0A6513e40db6EB1b165753AD52E80663aeA50545",
+    oracleChainlinkDai: "0x4746dec9e833a82ec7c2c1356372ccf2cfcd2f3d",
+    oracleChainlinkTusd: "0x7c5d415b64312d38c56b54358449d0a4058339d2",
+    oracleChainlinkMatic: "0xab594600376ec9fd91f8e885dadf0ce036862de0",
+}
+
+let DEFAULT = BSC                                                                                                                                                        ;
+
+setDefault(process.env.ETH_NETWORK);
+
+function setDefault(network) {
+    console.log(`[Node] Assets: [${network}]`)
+
+    switch (network) {
+        case 'ARBITRUM':
+            DEFAULT = ARBITRUM;
+            break;
+        case 'AVALANCHE':
+            DEFAULT = AVALANCHE;
+            break;
+        case 'BSC':
+            DEFAULT = BSC;
+            break;
+        case 'FANTOM':
+            DEFAULT = FANTOM;
+            break;
+        case 'POLYGON':
+            DEFAULT = POLYGON;
+            break;
+        case "OPTIMISM":
+            DEFAULT = OPTIMISM;
+            break
+        default:
+            throw new Error('Unknown network');
+    }
+}
+
+module.exports = {
+    ARBITRUM: ARBITRUM,
+    AVALANCHE: AVALANCHE,
+    BSC: BSC,
+    FANTOM: FANTOM,
+    POLYGON: POLYGON,
+    OPTIMISM: OPTIMISM,
+    DEFAULT: DEFAULT,
+    COMMON: COMMON,
+    setDefault: setDefault
+}
