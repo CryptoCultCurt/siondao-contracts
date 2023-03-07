@@ -4,12 +4,21 @@ require("@nomiclabs/hardhat-etherscan");
 require("hardhat-gas-reporter");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers");
+require('./utils/hardhat-ovn');
 require('dotenv').config()
+require('hardhat-contract-sizer');
 
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.17",
-  namedAccounts: process.env.namedAccounts,
+  solidity: {
+    version: "0.8.17",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+        details: { yul: false }
+      }
+    }
+  },
   defaultNetwork: 'hardhat',
   networks: {
     bsc: {
@@ -43,7 +52,17 @@ module.exports = {
     deployer: {
         default: 0
     }
+  },
+  gasReporter: {
+    enabled: true
+  },
+  contractSizer: {
+    alphaSort: false,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: false,
+    only: [],
+    except: []
   }
-     // gasReporter: process.env.gasReport
 };
 

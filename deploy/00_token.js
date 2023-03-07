@@ -4,17 +4,14 @@ const {ethers} = require("hardhat");
 
 module.exports = async ({getNamedAccounts, deployments}) => {
     console.log('first step');
-    const {deploy} = deployments;
+    const { save } = deployments;
     console.log('second step');
     const {deployer} = await getNamedAccounts();
     console.log(deployer);
-    let params = {
-        from: deployer,
-        args: [Date.now()],
-        log: true
-    };
+    let params = {args: ["STDAO", "StableDao", 18]};
+    
    // await deployProxy('Lock', deployments, save, params);
-    await deploy('Lock', params)
+    await deployProxy('TestToken', deployments, save, params)
   //  let usdPlus = await ethers.getContract('Lock');
 
     console.log('did it do something?')
@@ -23,4 +20,4 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
 };
 
-module.exports.tags = ['Lock'];
+module.exports.tags = ['base','Token'];

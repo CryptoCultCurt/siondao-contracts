@@ -7,9 +7,11 @@
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
-    "hardhat": "^2.13.0"
+    "hardhat": "^2.13.0",
+    "hardhat-contract-sizer": "^2.8.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.8.2",
     "hardhat-deploy": "^0.11.24"
   }
 }
