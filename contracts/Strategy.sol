@@ -9,6 +9,7 @@ import "./libraries/TokenMath.sol";
 
 import "./interfaces/IStrategy.sol";
 import "./interfaces/IControlRole.sol";
+import "hardhat/console.sol";
 
 
 abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
@@ -88,6 +89,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         address _asset,
         uint256 _amount
     ) external override onlyPortfolioManager {
+        console.log('stake called in strategy');
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
 
@@ -104,6 +106,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         address _beneficiary,
         bool _targetIsZero
     ) external override onlyPortfolioManager returns (uint256) {
+        console.log("strategey unstake");
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
 

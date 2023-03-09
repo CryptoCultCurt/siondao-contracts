@@ -14,13 +14,15 @@ let ethers = require('hardhat').ethers;
 
 let wallet = undefined;
 async function initWallet() {
+    console.log('in init wallet');
+    //console.log(wallet);
 
     if (wallet)
         return wallet;
 
     let provider = ethers.provider;
     console.log('[User] Provider: ' + provider.connection.url);
-    wallet = await new ethers.Wallet(process.env.PK_POLYGON, provider);
+    wallet = await new ethers.Wallet(process.env.PK_BSC, provider);
     console.log('[User] Wallet: ' + wallet.address);
     const balance = await provider.getBalance(wallet.address);
     console.log('[User] Balance wallet: ' + fromE18(balance.toString()));

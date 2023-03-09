@@ -379,6 +379,8 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
 
     function setStrategyWeights(StrategyWeight[] calldata _strategyWeights) external onlyPortfolioAgent {
 
+        console.log('portfolio set strategy weight');
+
         require(_strategyWeights.length == strategyWeights.length, 'Wrong number of strategies');
 
         uint256 totalTarget = 0;

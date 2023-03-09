@@ -44,6 +44,16 @@ module.exports = {
           }
         }
       },
+      hardhat: {
+        chainId: 31337,
+        accounts: {mnemonic: process.env.MNEMONIC},
+        forking: {
+            url: 'https://rpc.ankr.com/bsc/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49'
+        }
+      },
+      localhost: {
+        accounts: {mnemonic: process.env.MNEMONIC}
+      }
     },
   etherscan: {
     apiKey:process.env.ETHERSCAN_API_BSC
@@ -59,7 +69,7 @@ module.exports = {
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: false,
     strict: false,
     only: [],
     except: []
