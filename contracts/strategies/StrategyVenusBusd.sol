@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "../Strategy.sol";
 import "../connectors/Venus.sol";
 import "../connectors/PancakeV2.sol";
+import "hardhat/console.sol";
 
 contract StrategyVenusBusd is Strategy {
 
@@ -64,6 +65,7 @@ contract StrategyVenusBusd is Strategy {
         address _asset,
         uint256 _amount
     ) internal override {
+        console.log("venus stake");
 
         require(_asset == address(busdToken), "Some token not compatible");
 
@@ -76,6 +78,8 @@ contract StrategyVenusBusd is Strategy {
         uint256 _amount,
         address _beneficiary
     ) internal override returns (uint256) {
+
+        console.log("venus unstake");
 
         require(_asset == address(busdToken), "Some token not compatible");
 
