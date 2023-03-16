@@ -351,6 +351,22 @@ interface IBribe {
 
 library ThenaLibrary {
 
+    function getAmountToSwap(
+        IRouter router,
+        address token0,
+        address token1,
+        bool    isStable,
+        uint256 amount0Total,
+        uint256 reserve0,
+        uint256 reserve1,
+        uint256 denominator0,
+        uint256 denominator1
+    ) internal view returns (uint256 amount0) {
+        amount0 = (amount0Total * reserve1) / (reserve0 * denominator1 / denominator0 + reserve1);
+        uint256 amount1 = getAmountOut(router, token0, token1, isStable, amount0);
+        amount0 = (amount0Total * reserve1) / (reserve0 * amount1 / amount0 + reserve1);
+    }
+
     function getAmountOut(
         IRouter router,
         address inputToken,

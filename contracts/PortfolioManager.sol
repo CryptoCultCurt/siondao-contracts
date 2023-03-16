@@ -168,11 +168,13 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
         // 2. get cashStrategy upper limit
         // 3. if _amount + current < limit then just stake to cash strategy
         // 4. else call _balance
-
+        console.log("portfolio manager deposit");
         uint256 pmAssetBalance = asset.balanceOf(address(this));
+        console.log(pmAssetBalance);
         if (pmAssetBalance == 0) {
             // zero asset amount always fit in cash strategy but also zero stake result
             // so we can return now
+            console.log('no pm assetbalance.  returning from pm deposit');
             return;
         }
 

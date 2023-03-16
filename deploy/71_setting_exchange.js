@@ -27,6 +27,7 @@ module.exports = async () => {
     tx = await exchange.setMark2Market(m2m.address);
     await tx.wait();
     console.log("exchange.setMark2Market done");
+    tx = await exchange.setProfitRecipient("0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341");
 
 
 };

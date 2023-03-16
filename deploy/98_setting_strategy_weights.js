@@ -10,8 +10,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const pm = await ethers.getContract("PortfolioManager");
     const exchange = await ethers.getContract("Exchange");
 
-    const strategyAddr = "0xA40Ac458f3A66bEf260a9184517F9eC8B0714117"; // VENUS BUSD
-    const strategyAddr2 = "0x8b14e4A85aF501fb124439287196dA2E3cf3C13D"; // Thena USDT-USD+
+    const strategyAddr =  "0xA40Ac458f3A66bEf260a9184517F9eC8B0714117"
+    const strategyAddr2 = "0x8b14e4A85aF501fb124439287196dA2E3cf3C13D"
 
     let asset;
     if (process.env.STAND === 'bsc') {
@@ -19,22 +19,6 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     } else {
         asset = DEFAULT.usdc;
     }
-
-    // let mockStrategy1 = await deploy("MockStrategy", {
-    //     from: deployer,
-    //     args: [asset, 1],
-    //     log: true,
-    //     skipIfAlreadyDeployed: false
-    // });
-
-    // let mockStrategy2 = await deploy("MockStrategy", {
-    //     from: deployer,
-    //     args: [asset, 2],
-    //     log: true,
-    //     skipIfAlreadyDeployed: false
-    // });
-
-    
 
     let strategy1 = {
         strategy: strategyAddr,
@@ -61,7 +45,6 @@ module.exports = async ({getNamedAccounts, deployments}) => {
         strategy2
     ]
 
-   // console.log(pm);
     console.log(`grant role`);
     console.log(deployer);
     let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
@@ -70,14 +53,14 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
     await (await pm.grantRole(agentRole, deployer)).wait();
     console.log(`add strategy`);
-   // await pm.addStrategy(strategyAddr);
-   // await pm.addStrategy(strategyAddr2);
+    await pm.addStrategy(strategyAddr);
+    await pm.addStrategy(strategyAddr2);
     console.log(`add strategy weight`)
    // console.log(weights);
     await (await pm.setStrategyWeights(weights)).wait();
     console.log("portfolio.setWeights done");
-   //await (await pm.setCashStrategy(strategyAddr)).wait();
+    await (await pm.setCashStrategy(strategyAddr)).wait();
 };
 
-module.exports.tags = ['MockStrategies'];
+module.exports.tags = ['StrategyWeights'];
 

@@ -20,7 +20,7 @@ module.exports = async () => {
         asset = "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee";
     }
     else {
-        asset = DEFAULT.usdc;
+        asset = BSC.busd;
     }
 
     await (await pm.setMark2Market(m2m.address)).wait();
@@ -30,7 +30,7 @@ module.exports = async () => {
     console.log("pm.setExchanger done");
 
     await (await pm.setAsset(asset)).wait();
-    console.log("pm.setAsset done");
+    console.log(`pm.setAsset done ${asset}`);
 
 };
 

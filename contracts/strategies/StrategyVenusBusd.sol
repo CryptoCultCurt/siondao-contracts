@@ -70,6 +70,7 @@ contract StrategyVenusBusd is Strategy {
         require(_asset == address(busdToken), "Some token not compatible");
 
         busdToken.approve(address(vBusdToken), _amount);
+        console.log('calling vBusdToken.mint');
         vBusdToken.mint(_amount);
     }
 

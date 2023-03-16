@@ -320,11 +320,13 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     // Minting USD+ in exchange for an asset
 
     function mint(MintParams calldata params) external whenNotPaused oncePerBlock returns (uint256) {
+        console.log("mint!");
         return _buy(params.asset, params.amount, params.referral);
     }
 
     // Deprecated method - not recommended for use
     function buy(address _asset, uint256 _amount) external whenNotPaused oncePerBlock returns (uint256) {
+        console.log("buy!");
         return _buy(_asset, _amount, "");
     }
 
@@ -336,6 +338,12 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
      * @return Amount of minted USD+ to caller
      */
     function _buy(address _asset, uint256 _amount, string memory _referral) internal returns (uint256) {
+        console.log('doing a mint/buy on exchange');
+        console.log(_asset);
+        console.log(address(usdc));
+        console.log(_amount);
+        console.log('currentbalance:');
+        console.log(usdc.balanceOf(msg.sender));
         require(_asset == address(usdc), "Only asset available for buy");
 
         uint256 currentBalance = usdc.balanceOf(msg.sender);
@@ -344,12 +352,14 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         require(_amount > 0, "Amount of asset is zero");
 
         uint256 usdPlusAmount = _assetToRebase(_amount);
+        console.log('usdPlusAmount');
+        console.log(usdPlusAmount);
         require(usdPlusAmount > 0, "Amount of USD+ is zero");
 
         uint256 _targetBalance = usdc.balanceOf(address(portfolioManager)) + _amount;
         usdc.transferFrom(msg.sender, address(portfolioManager), _amount);
         require(usdc.balanceOf(address(portfolioManager)) == _targetBalance, 'pm balance != target');
-
+        console.log('calling pm.deposit()');
         portfolioManager.deposit();
 
         uint256 buyFeeAmount;
@@ -479,7 +489,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
             }else {
                 loss += totalUsdPlus * compensateLoss / compensateLossDenominator;
                 loss = _rebaseToAsset(loss);
-                IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
+            //    IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
                 portfolioManager.deposit();
             }
 

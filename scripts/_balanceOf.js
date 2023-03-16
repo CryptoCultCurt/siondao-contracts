@@ -20,7 +20,7 @@ async function main() {
         console.log(e)
     }
 
-    console.log(ownerBalance.toString());
+    console.log(`Balance: ${(ownerBalance/1000000000000000000).toString()}`);
 }
 
 main();

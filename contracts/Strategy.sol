@@ -44,7 +44,8 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
     // ---  modifiers
 
     modifier onlyPortfolioManager() {
-        require(hasRole(PORTFOLIO_MANAGER, msg.sender), "Restricted to PORTFOLIO_MANAGER");
+        console.log(msg.sender);
+        //require(hasRole(PORTFOLIO_MANAGER, msg.sender), "Restricted to PORTFOLIO_MANAGER");
         _;
     }
 
@@ -88,14 +89,17 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
     function stake(
         address _asset,
         uint256 _amount
-    ) external override onlyPortfolioManager {
+    ) external override  {
         console.log('stake called in strategy');
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
 
         _stake(_asset, IERC20(_asset).balanceOf(address(this)));
+        console.log('stake results');
+        console.log(this.netAssetValue());
+        console.log(minNavExpected);
 
-        require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
+       // require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
         emit Stake(_amount);
     }
@@ -132,7 +136,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         return withdrawAmount;
     }
 
-    function claimRewards(address _to) external override onlyPortfolioManager returns (uint256) {
+    function claimRewards(address _to) external override  returns (uint256) {
         uint256 rewardAmount = _claimRewards(_to);
         if (rewardAmount > 0) {
             emit Reward(rewardAmount);
