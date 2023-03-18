@@ -10,9 +10,9 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const pm = await ethers.getContract("PortfolioManager");
     const exchange = await ethers.getContract("Exchange");
 
-    const strategyAddr =  "0x8b14e4A85aF501fb124439287196dA2E3cf3C13D"
-    const strategyAddr2 = "0xA40Ac458f3A66bEf260a9184517F9eC8B0714117"
-    const strategyAddr3 = "0x4e99Af4Bb6CDDA8191b67f53407700C67BFFE34f"
+    const strategyAddr =  await ethers.getContract("StrategyVenusBusd");
+    const strategyAddr2 = await ethers.getContract("StrategyThenaUsdtUsdPlus");
+    const strategyAddr3 = await ethers.getContract("StrategyThenawUsdrUsdc");
 
     let asset;
     if (process.env.STAND === 'bsc') {
@@ -22,7 +22,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     }
 
     let strategy1 = {
-        strategy: strategyAddr,
+        strategy: strategyAddr.address,
         minWeight: 0,
         targetWeight: 50000,
         maxWeight: 100000,
@@ -32,7 +32,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     }
 
     let strategy2 = {
-        strategy: strategyAddr2,
+        strategy: strategyAddr2.address,
         minWeight: 0,
         targetWeight: "25000",
         maxWeight: "100000",
@@ -43,7 +43,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
 
     let strategy3 = {
-        strategy: strategyAddr3,
+        strategy: strategyAddr3.address,
         minWeight: 0,
         targetWeight: "25000",
         maxWeight: "100000",
@@ -66,14 +66,14 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
     await (await pm.grantRole(agentRole, deployer)).wait();
     console.log(`add strategy`);
-    await pm.addStrategy(strategyAddr);
-    await pm.addStrategy(strategyAddr2);
-    await pm.addStrategy(strategyAddr3);
+    await pm.addStrategy(strategyAddr.address);
+    await pm.addStrategy(strategyAddr2.address);
+    await pm.addStrategy(strategyAddr3.address);
     console.log(`add strategy weight`)
    // console.log(weights);
     await (await pm.setStrategyWeights(weights)).wait();
     console.log("portfolio.setWeights done");
-    await (await pm.setCashStrategy(strategyAddr)).wait();
+    await (await pm.setCashStrategy(strategyAddr.address)).wait();
 };
 
 module.exports.tags = ['StrategyWeights'];

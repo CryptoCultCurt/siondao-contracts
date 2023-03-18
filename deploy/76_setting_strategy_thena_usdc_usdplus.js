@@ -1,5 +1,6 @@
 const { ethers } = require("hardhat");
 let { BSC } = require('../utils/assets');
+const constants = require('../utils/constants');
 
 module.exports = async ({getNamedAccounts, deployments}) => {
     const {deploy} = deployments;
@@ -11,7 +12,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let wombatPool = '0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0';
     let usdPlus = "0xe80772Eaf6e2E18B651F160Bc9158b2A5caFCA65";
     
-    const pm = "0xac175f03294b8B46474423A8D4794b06b4b428d2";
+    const PM = await constants.getContract('PortfolioManager');
+    const pm = PM.address;
     const venus_busd = await ethers.getContract("StrategyThenaUsdtUsdPlus");
 
     let params = 

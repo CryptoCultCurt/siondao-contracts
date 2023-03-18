@@ -14,8 +14,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     await deployProxy('TestToken', deployments, save, params)
   //  let usdPlus = await ethers.getContract('Lock');
 
-    console.log('did it do something?')
-    console.log('Lock deploy done()');
+    console.log('Token deployed')
 
 
 };

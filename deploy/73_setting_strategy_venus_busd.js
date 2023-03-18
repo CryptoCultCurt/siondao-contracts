@@ -1,11 +1,13 @@
 const { ethers } = require("hardhat");
+const constants = require('../utils/constants');
 let {DEFAULT, BSC, OPTIMISM, COMMON, ARBITRUM} = require('../utils/assets');
 
 module.exports = async ({getNamedAccounts, deployments}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
 
-    const pm = "0xac175f03294b8B46474423A8D4794b06b4b428d2";
+    const PM = await constants.getContract('PortfolioManager');
+    const pm = PM.address;
 
     const venus_busd = await ethers.getContract("StrategyVenusBusd");
     let params = 
