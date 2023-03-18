@@ -237,16 +237,16 @@ contract StrategyThenawUsdrUsdc is Strategy {
 
         uint256 lpTokensToWithdraw = ThenaLibrary.getAmountLpTokens(
             router,
-            address(usdc),
             address(wUsdr),
+            address(usdc),
             pair.isStable(),
             // add 1e13 to _amount for smooth withdraw
             _amount + 1e13,
             totalLpBalance,
-            reserveUsdc,
             reservewUsdr,
-            usdcDm,
-            wUsdrDm
+            reserveUsdc,
+            wUsdrDm,
+            usdcDm
         );
         uint256 lpBalance = gauge.balanceOf(address(this));
         if (lpTokensToWithdraw > lpBalance) {

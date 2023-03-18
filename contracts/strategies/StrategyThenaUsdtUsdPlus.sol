@@ -97,8 +97,8 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
 
         // the amount of busd to start
         uint256 busdBalance = busd.balanceOf(address(this));
-        console.log("busd balance");
-        console.log(busdBalance);
+        // console.log("busd balance");
+        // console.log(busdBalance);
 
         // swap busd for usdt    //path/pool/amt/min/to/
         uint256 usdtBalanceOracle = ChainlinkLibrary.convertTokenToToken(
@@ -330,7 +330,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                 pair.isStable(),
                 pair.isStable(),
                 usdPlusBalance,
-                OvnMath.subBasisPoints((usdPlusBalance), 180),
+                OvnMath.subBasisPoints((busdBalanceOut), 180),
                 address(this)
             );
         }

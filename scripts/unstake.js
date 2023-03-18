@@ -2,7 +2,6 @@ const util = require('../utils/script-utils');
 const constants = require('../utils/constants');
 const hre = require("hardhat");
 
-
 async function main() {
     let ethers = hre.ethers;
     hre.ethers.provider = new ethers.providers.JsonRpcProvider(hre.ethers.provider.connection.url);
@@ -17,26 +16,33 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const exchange = await constants.getContract('Exchange');
-    let busd = await util.getERC20("busd");
-    
-    let amount = "1000000000000000000000"; // 5000
-    let referral = "";
-    let params = [
-        busd.address,
-        amount,
-        referral
-    ]
+    const strategy = await constants.getContract('StrategyThenawUsdrUsdc');
+    //const strategy = await constants.getContract('StrategyThenaUsdtUsdPlus');
+
+    const pm = await constants.getContract('PortfolioManager');
+ 
+    const busd = await util.getERC20("busd");
+
+    let asset = busd.address; 
+    let amount = "100000000000"; // 5000
+    let beneficiary = wallet;
+   
 
     let fromAddr = wallet;
-
+    const signer = await ethers.getSigner(fromAddr);
+    const nav = await strategy.netAssetValue();
+    console.log(nav.toString())
     await provider.send(
         "hardhat_impersonateAccount",
        [fromAddr]
     )
+    
+    const PORTFOLIO_MANAGER = await strategy.PORTFOLIO_MANAGER();
+    await strategy.grantRole(PORTFOLIO_MANAGER, signer.address);
 
-    const signer = await ethers.getSigner(wallet);
-    await exchange.connect(signer).redeem(busd.address,"980000000000000000");
+
+
+    await strategy.connect(signer).unstake(asset,amount,beneficiary,false);
 
 
 }

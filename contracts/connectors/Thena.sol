@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "hardhat/console.sol";
 
 interface IPair {
 
@@ -421,6 +421,8 @@ library ThenaLibrary {
         uint256 denominator1
     ) internal view returns (uint256 amountLpTokens) {
         amountLpTokens = (totalAmountLpTokens * amount0Total * denominator1) / (reserve0 * denominator1 + reserve1 * denominator0);
+        console.log('getAmountLPTokens');
+        console.log('r1: %s amountLp %s totalAmountLp %s', reserve1, amountLpTokens,totalAmountLpTokens);
         uint256 amount1 = reserve1 * amountLpTokens / totalAmountLpTokens;
         uint256 amount0 = getAmountOut(router, token1, token0, isStable, amount1);
         amountLpTokens = (totalAmountLpTokens * amount0Total * amount1) / (reserve0 * amount1 + reserve1 * amount0);

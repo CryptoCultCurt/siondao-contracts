@@ -24,6 +24,8 @@ async function main() {
     let busdToken = await venusstrat.busd();
     let usdcToken = await venusstrat.usdc();
     let wUsdr = await venusstrat.wUsdr();
+    let usdcDm = await venusstrat.usdcDm();
+    let wUsdrDm = await venusstrat.wUsdrDm();
     let  the =  await venusstrat.the();
     let pair = await venusstrat.pair();
     let router = await venusstrat.router();
@@ -42,6 +44,8 @@ async function main() {
     BUSD:           ${busdToken}
     USDC:           ${usdcToken}
     wUsdr:          ${wUsdr}
+    USDC Decimal    ${usdcDm}
+    wUsdr Decimal   ${wUsdrDm}
     the             ${the}
     pair            ${pair}
     router:         ${router}

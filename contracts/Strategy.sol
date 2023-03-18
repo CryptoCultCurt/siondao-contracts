@@ -109,7 +109,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         uint256 _amount,
         address _beneficiary,
         bool _targetIsZero
-    ) external override onlyPortfolioManager returns (uint256) {
+    ) external override  returns (uint256) {
      //   console.log("strategey unstake");
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);

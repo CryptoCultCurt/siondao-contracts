@@ -16,6 +16,7 @@ async function main() {
         "hardhat_impersonateAccount",
        [fromAddr]
     )
+    ethers.parseEther
 
 
     const signer = await ethers.getSigner(fromAddr);
@@ -25,7 +26,12 @@ async function main() {
     console.log(`Sending funds to ${toAddr}`);
     console.log(`${fromAddr} has ${ethers.utils.formatEther(await signer.getBalance())} BNB`);
     console.log(`${fromAddr} has ${ethers.utils.formatEther(await busd.balanceOf(fromAddr))} BUSD`);
-
+    let amount = ethers.utils.parseEther("5.0");
+    const tx = {
+        to: toAddr,
+        value: ethers.utils.parseEther("5")
+    }
+    await signer.sendTransaction(tx);
     await busd.transfer(
         toAddr,
         busdBalance

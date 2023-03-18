@@ -15,7 +15,7 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const exchange = constants.getContract('exchange');
+    const exchange = await constants.getContract('Exchange');
     const UNIT_ROLE = await exchange.UNIT_ROLE();
     const FREE_RIDER_ROLE = await exchange.PORTFOLIO_AGENT_ROLE();
 

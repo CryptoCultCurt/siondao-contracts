@@ -32,7 +32,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
             wUsdrDm: "1000000000",
 
         };
-
+        console.log(params);
 
     await (await venus_busd.setParams(params)).wait();
     await venus_busd.setPortfolioManager(pm);

@@ -8,7 +8,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     console.log('second step');
     const {deployer} = await getNamedAccounts();
     console.log(deployer);
-    let params = {args: ["STDAO", "StableDao", 18]};
+    let params = {args: ["SION", "SION Dao", 18]};
     
    // await deployProxy('Lock', deployments, save, params);
     await deployProxy('TestToken', deployments, save, params)
