@@ -404,6 +404,28 @@ library ThenaLibrary {
         return router.getAmountsOut(amountInput, routes)[2];
     }
 
+        /**
+     * Get amount of lp tokens where amount0Total is total getting amount nominated in token0
+     *
+     */
+    function getAmountLpTokens(
+        IRouter router,
+        address token0,
+        address token1,
+        bool    isStable,
+        uint256 amount0Total,
+        uint256 totalAmountLpTokens,
+        uint256 reserve0,
+        uint256 reserve1,
+        uint256 denominator0,
+        uint256 denominator1
+    ) internal view returns (uint256 amountLpTokens) {
+        amountLpTokens = (totalAmountLpTokens * amount0Total * denominator1) / (reserve0 * denominator1 + reserve1 * denominator0);
+        uint256 amount1 = reserve1 * amountLpTokens / totalAmountLpTokens;
+        uint256 amount0 = getAmountOut(router, token1, token0, isStable, amount1);
+        amountLpTokens = (totalAmountLpTokens * amount0Total * amount1) / (reserve0 * amount1 + reserve1 * amount0);
+    }
+
     function swap(
         IRouter router,
         address inputToken,

@@ -1,9 +1,9 @@
 
-const hre = require("hardhat");
 const util = require('../utils/script-utils');
-const constants = require('../utils/constants.js');
-const poolAbi = require('../utils/abi/ThenaPool.json');
+const hre = require("hardhat");
 const gaugeAbi = require('../utils/abi/ThenaGauge.json');
+const poolAbi = require('../utils/abi/ThenaPool.json');
+const constants = require('../utils/constants');
 
 async function main() {
     let ethers = hre.ethers;
@@ -16,14 +16,14 @@ async function main() {
     console.log(`Chain:       ${chainId}`);
 
     // contracts
-    const venusstrat = await constants.getContract("StrategyThenaUsdtUsdPlus");
+    const venusstrat = await constants.getContract('StrategyThenawUsdrUsdc');
     const pm = await constants.getContract('PortfolioManager');
     const thenaPool = await ethers.getContractAt(poolAbi, await venusstrat.pair());
     const thenaGauge = await ethers.getContractAt(gaugeAbi, await venusstrat.gauge());
 
     let busdToken = await venusstrat.busd();
-    let usdtToken = await venusstrat.usdt();
-    let usdPlus = await venusstrat.usdPlus();
+    let usdcToken = await venusstrat.usdc();
+    let wUsdr = await venusstrat.wUsdr();
     let  the =  await venusstrat.the();
     let pair = await venusstrat.pair();
     let router = await venusstrat.router();
@@ -31,17 +31,17 @@ async function main() {
     let wombatPool = await venusstrat.wombatPool();
     let wombatRouter = await venusstrat.wombatRouter();
     let oracleBusd = await venusstrat.oracleBusd();
-    let oracleUsdt = await venusstrat.oracleUsdt();
+    let oracleUsdc = await venusstrat.oracleUsdc();
     
     const busd = await util.getERC20ByAddress(busdToken, wallet);
     const portfolioManager = await venusstrat.portfolioManager();
     const PORTFOLIO_MANAGER = await venusstrat.PORTFOLIO_MANAGER();
     const pmRole = await venusstrat.hasRole(PORTFOLIO_MANAGER,portfolioManager);
 
-    console.log(`\nVenusBUSD Strategy:
+    console.log(`\Thena wUsdr Strategy:
     BUSD:           ${busdToken}
-    USDT:           ${usdtToken}
-    usdPlus:        ${usdPlus}
+    USDC:           ${usdcToken}
+    wUsdr:          ${wUsdr}
     the             ${the}
     pair            ${pair}
     router:         ${router}
@@ -49,7 +49,7 @@ async function main() {
     wombatPool:     ${wombatPool}
     wombatRouter:   ${wombatRouter}
     oracleBusd:     ${oracleBusd}
-    oracleUsdt:     ${oracleUsdt}
+    oracleUsdc:     ${oracleUsdc}
     PM:             ${portfolioManager} (${pmRole})
     `)
 
@@ -66,7 +66,6 @@ async function main() {
     Gauge Balance:          ${gaugeBal}
     Rewards:                ${rewards}
     `)
-   
 }
 
 main();

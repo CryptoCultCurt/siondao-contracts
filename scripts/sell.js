@@ -1,7 +1,7 @@
-
 const util = require('../utils/script-utils');
 const constants = require('../utils/constants');
 const hre = require("hardhat");
+
 
 async function main() {
     let ethers = hre.ethers;
@@ -17,11 +17,8 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const exchange = await constants.getContract('Exchange');
-    const signer = await ethers.getSigner(wallet);
-    const busd = await util.getERC20("busd",signer);
-
-    let asset = busd.address; 
+    const exchange = constants.getContract('Exchange');
+    
     let amount = "1000000000000000000000"; // 5000
     let referral = "";
     let params = [
@@ -37,8 +34,9 @@ async function main() {
        [fromAddr]
     )
 
-    await busd.connect(signer).approve(exchange.address,"500000000000000000000000");
-    await exchange.connect(signer).mint(params);
+    const signer = await ethers.getSigner(wallet);
+    let busd = await util.getERC20("busd",signer);
+    await exchange.connect(signer).redeem(busd.address,"500000000000000000000");
 
 
 }

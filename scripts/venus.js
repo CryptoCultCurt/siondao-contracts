@@ -1,10 +1,11 @@
 
 const util = require('../utils/script-utils');
+const constants = require('../utils/constants');
 const hre = require("hardhat");
 
 async function main() {
     let ethers = hre.ethers;
-    let wallet = "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341";
+    let wallet = constants.wallet;
     const [owner,deployer] = await ethers.getSigners();
     const { chainId } = await ethers.provider.getNetwork();
     console.log(`\nOwner:       ${owner.address}`);
@@ -12,14 +13,9 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const VENUSSTRAT = await ethers.getContractFactory("StrategyVenusBusd");
-    const venusstrat = VENUSSTRAT.attach("0xA40Ac458f3A66bEf260a9184517F9eC8B0714117");
-
-    const EXCHANGE = await ethers.getContractFactory("Exchange");
-    const exchange = EXCHANGE.attach("0x0c61a2be3465241c51145E99e2BEa5095BC566cf");
-
-    const PM = await ethers.getContractFactory("PortfolioManager");
-    const pm = PM.attach("0xac175f03294b8B46474423A8D4794b06b4b428d2");
+    const venusstrat = await constants.getContract("StrategyVenusBusd");
+    const exchange = await constants.getContract('Exchange');
+    const pm = await constants.getContract('PortfolioManager');
 
     let busdToken = await venusstrat.busdToken();
     let vBusdToken = await venusstrat.vBusdToken();
@@ -49,9 +45,7 @@ async function main() {
     const balanceBusd = await busd.balanceOf(exchange.address);
     const nav = await venusstrat.netAssetValue();
  
-    console.log(`
-    
-    Balances:
+    console.log(`Balances:
     vBUSD:                  ${balance}
     BUSD:                   ${balanceBusd}
     Net Asset Value:        ${nav}

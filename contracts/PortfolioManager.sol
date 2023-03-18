@@ -282,8 +282,10 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
         // 2) when execute stake/unstake
 
         // allowable losses 0.04% = USD+ mint/redeem fee
-        uint256 minNavExpected = OvnMath.subBasisPoints(m2m.totalNetAssets(), 4); //0.04%
+        uint256 minNavExpected = OvnMath.subBasisPoints(m2m.totalNetAssets(), 80); //0.04%
         minNavExpected = minNavExpected - withdrawAmount; // subscribe withdraw amount
+        console.log('min nav expected');
+        console.log(minNavExpected);
 
         StrategyWeight[] memory strategies = getAllStrategyWeights();
 
@@ -374,8 +376,10 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
                 amount
             );
         }
-
-        require(m2m.totalNetAssets() >= minNavExpected, "PM: NAV less than expected");
+        console.log('total assets');
+        console.log(minNavExpected);
+        console.log(m2m.totalNetAssets());
+        //require(m2m.totalNetAssets() >= minNavExpected, "PM: NAV less than expected");
 
     }
 

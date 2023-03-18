@@ -44,8 +44,8 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
     // ---  modifiers
 
     modifier onlyPortfolioManager() {
-        console.log(msg.sender);
-        //require(hasRole(PORTFOLIO_MANAGER, msg.sender), "Restricted to PORTFOLIO_MANAGER");
+       //console.log(msg.sender);
+        require(hasRole(PORTFOLIO_MANAGER, msg.sender), "Restricted to PORTFOLIO_MANAGER");
         _;
     }
 
@@ -90,14 +90,14 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         address _asset,
         uint256 _amount
     ) external override  {
-        console.log('stake called in strategy');
+       // console.log('stake called in strategy');
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
 
         _stake(_asset, IERC20(_asset).balanceOf(address(this)));
-        console.log('stake results');
-        console.log(this.netAssetValue());
-        console.log(minNavExpected);
+        // console.log('stake results');
+        // console.log(this.netAssetValue());
+        // console.log(minNavExpected);
 
        // require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
@@ -110,7 +110,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         address _beneficiary,
         bool _targetIsZero
     ) external override onlyPortfolioManager returns (uint256) {
-        console.log("strategey unstake");
+     //   console.log("strategey unstake");
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
 
@@ -121,6 +121,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
             withdrawAmount = _unstakeFull(_asset, _beneficiary);
         } else {
             withdrawAmount = _unstake(_asset, _amount, _beneficiary);
+            console.log('withdrawAmount of %s and amount of %s',withdrawAmount,_amount);
             require(withdrawAmount >= _amount, 'Returned value less than requested amount');
         }
 

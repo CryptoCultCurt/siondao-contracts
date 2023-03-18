@@ -69,7 +69,7 @@ module.exports = {
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: false,
+    runOnCompile: true,
     strict: false,
     only: [],
     except: []

@@ -10,8 +10,9 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const pm = await ethers.getContract("PortfolioManager");
     const exchange = await ethers.getContract("Exchange");
 
-    const strategyAddr =  "0xA40Ac458f3A66bEf260a9184517F9eC8B0714117"
-    const strategyAddr2 = "0x8b14e4A85aF501fb124439287196dA2E3cf3C13D"
+    const strategyAddr =  "0x8b14e4A85aF501fb124439287196dA2E3cf3C13D"
+    const strategyAddr2 = "0xA40Ac458f3A66bEf260a9184517F9eC8B0714117"
+    const strategyAddr3 = "0x4e99Af4Bb6CDDA8191b67f53407700C67BFFE34f"
 
     let asset;
     if (process.env.STAND === 'bsc') {
@@ -33,7 +34,18 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy2 = {
         strategy: strategyAddr2,
         minWeight: 0,
-        targetWeight: "50000",
+        targetWeight: "25000",
+        maxWeight: "100000",
+        riskFactor: 0,
+        enabled: true,
+        enabledReward: true,
+    }
+
+
+    let strategy3 = {
+        strategy: strategyAddr3,
+        minWeight: 0,
+        targetWeight: "25000",
         maxWeight: "100000",
         riskFactor: 0,
         enabled: true,
@@ -42,7 +54,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
     let weights = [
         strategy1,
-        strategy2
+        strategy2,
+        strategy3
     ]
 
     console.log(`grant role`);
@@ -55,6 +68,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     console.log(`add strategy`);
     await pm.addStrategy(strategyAddr);
     await pm.addStrategy(strategyAddr2);
+    await pm.addStrategy(strategyAddr3);
     console.log(`add strategy weight`)
    // console.log(weights);
     await (await pm.setStrategyWeights(weights)).wait();

@@ -110,6 +110,8 @@ contract StrategyVenusBusd is Strategy {
     }
 
     function _totalValue() internal view returns (uint256) {
+        console.log("TOTAL VALUE FROM VENUS");
+        console.log((vBusdToken.balanceOf(address(this)) * vBusdToken.exchangeRateStored() / 1e18) + busdToken.balanceOf(address(this)));
         return (vBusdToken.balanceOf(address(this)) * vBusdToken.exchangeRateStored() / 1e18) + busdToken.balanceOf(address(this));
     }
 
