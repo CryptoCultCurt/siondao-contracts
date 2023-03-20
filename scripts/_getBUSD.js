@@ -10,7 +10,7 @@ async function main() {
       );
     const [owner,deployer] = await ethers.getSigners();
     const fromAddr = constants.whale;
-    const toAddr = constants.wallet;
+    const toAddr = owner.address;//constants.wallet;
 
     await provider.send(
         "hardhat_impersonateAccount",

@@ -93,7 +93,7 @@ contract StrategyVenusBusd is Strategy {
         address _asset,
         address _beneficiary
     ) internal override returns (uint256) {
-
+        console.log('venus unstake full');
         require(_asset == address(busdToken), "Some token not compatible");
 
         vBusdToken.redeem(vBusdToken.balanceOf(address(this)));

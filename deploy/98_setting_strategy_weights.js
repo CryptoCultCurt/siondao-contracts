@@ -13,6 +13,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const strategyAddr =  await ethers.getContract("StrategyVenusBusd");
     const strategyAddr2 = await ethers.getContract("StrategyThenaUsdtUsdPlus");
     const strategyAddr3 = await ethers.getContract("StrategyThenawUsdrUsdc");
+    const strategyAddr4 = await ethers.getContract("StrategyWombexBusd");
 
     let asset;
     if (process.env.STAND === 'bsc') {
@@ -24,8 +25,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy1 = {
         strategy: strategyAddr.address,
         minWeight: 0,
-        targetWeight: 50000,
-        maxWeight: 100000,
+        targetWeight: 0,
+        maxWeight: 10000,
         riskFactor: 0,
         enabled: "true",
         enabledReward: "true",
@@ -34,7 +35,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy2 = {
         strategy: strategyAddr2.address,
         minWeight: 0,
-        targetWeight: "25000",
+        targetWeight: "35000",
         maxWeight: "100000",
         riskFactor: 0,
         enabled: true,
@@ -45,7 +46,17 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy3 = {
         strategy: strategyAddr3.address,
         minWeight: 0,
-        targetWeight: "25000",
+        targetWeight: "35000",
+        maxWeight: "100000",
+        riskFactor: 0,
+        enabled: true,
+        enabledReward: true,
+    }
+
+    let strategy4 = {
+        strategy: strategyAddr4.address,
+        minWeight: 0,
+        targetWeight: "30000",
         maxWeight: "100000",
         riskFactor: 0,
         enabled: true,
@@ -55,25 +66,24 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let weights = [
         strategy1,
         strategy2,
-        strategy3
+        strategy3,
+        strategy4
     ]
 
-    console.log(`grant role`);
-    console.log(deployer);
-    let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
-    console.log('agentrole');
-    console.log(agentRole);
 
+    let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
     await (await pm.grantRole(agentRole, deployer)).wait();
     console.log(`add strategy`);
-    await pm.addStrategy(strategyAddr.address);
-    await pm.addStrategy(strategyAddr2.address);
-    await pm.addStrategy(strategyAddr3.address);
+//    await pm.addStrategy(strategyAddr.address);
+//   await pm.addStrategy(strategyAddr2.address);
+//    await pm.addStrategy(strategyAddr3.address);
+ //await pm.addStrategy(strategyAddr4.address);
     console.log(`add strategy weight`)
    // console.log(weights);
-    await (await pm.setStrategyWeights(weights)).wait();
+   await (await pm.setStrategyWeights(weights)).wait();
     console.log("portfolio.setWeights done");
-    await (await pm.setCashStrategy(strategyAddr.address)).wait();
+ //   await (await pm.setCashStrategy(strategyAddr4.address)).wait();
+  // await pm.removeStrategy(strategyAddr.address);
 };
 
 module.exports.tags = ['StrategyWeights'];

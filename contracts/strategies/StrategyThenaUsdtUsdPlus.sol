@@ -135,22 +135,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             usdtDm,
             usdPlusDm
         );
-       // console.log("amountUsdPlusToSwap");
+
         usdPlusSwap = usdPlusSwap / 1000000000000;
-       // console.log(usdPlusSwap);
 
-        // uint256  = busd.balanceOf(address(this));
-        // console.log("usdplus swap");
-        // console.log(address(usdt));
-        // console.log(address(usdPlus));
-        // console.log(usdPlusSwap);
-        // USD+ IS ONLY SIX DECIMALS
-        // console.log("selling:");
-        // console.log(usdPlusSwap * 1000000000000);
-        // console.log("for");
-        // console.log(OvnMath.subBasisPoints(usdPlusSwap, 40));
 
-        uint256 swap = ThenaLibrary.swap(
+        ThenaLibrary.swap(
             router,
             address(usdt),
             address(usdPlus),
@@ -159,16 +148,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             OvnMath.subBasisPoints((usdPlusSwap), 180),
             address(this)
         );
-        // console.log("swapped for usdplus");
-        // console.log(swap);
-
+       
         // usdtQty will the amount returned from selling the busd
 
         uint256 usdPlusQty = usdPlus.balanceOf(address(this));
         usdtQty = usdt.balanceOf(address(this));
-        // console.log("amounts to deposit to LP");
-        // console.log(usdtQty);
-        // console.log(usdPlusQty);
 
         usdt.approve(address(router), usdtQty);
         usdPlus.approve(address(router), usdPlusQty);
@@ -181,8 +165,6 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             usdtQty
         );
 
-        // console.log("amount out");
-        // console.log(output);
         if (output > usdPlusQty) {
             //   console.log("not enough usdPlus");
             output = ThenaLibrary.getAmountOut(
@@ -321,7 +303,9 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             usdPlusBalance
         );
         if (busdBalanceOut > 0) {
-          //  console.log(usdPlusBalance);
+            console.log('usd+: %s busd: %s',usdPlusBalance,busdBalanceOut);
+            console.log('router: %s',address(router));
+
             ThenaLibrary.swap(
                 router,
                 address(usdPlus),
@@ -488,8 +472,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                 usdtToConvert
             );
         }
-        // console.log("TOTAL VALUE FROM USD PLUS %s",
-        // busdBalance);
+
         return busdBalance;
     }
 

@@ -37,6 +37,8 @@ async function main() {
     profitRecipient:    ${profitRecipient}
     usdPlus:            ${usdPlus}
     usdc:               ${usdc}
+    abroadmin:          ${await exchange.abroadMin()}
+    abroadmax:          ${await exchange.abroadMax()}
 
     `)
 }

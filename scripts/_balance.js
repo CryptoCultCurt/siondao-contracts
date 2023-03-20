@@ -14,15 +14,15 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const exchange = await constants.getContract('Exchange');
-    const UNIT_ROLE = await exchange.UNIT_ROLE();
-    const FREE_RIDER_ROLE = await exchange.PORTFOLIO_AGENT_ROLE();
+    const pm = await constants.getContract('PortfolioManager');
+  //  const UNIT_ROLE = await exchange.UNIT_ROLE();
+    const FREE_RIDER_ROLE = await pm.PORTFOLIO_AGENT_ROLE();
 
 
-    await exchange.grantRole(FREE_RIDER_ROLE, owner.address);
-    await exchange.grantRole(UNIT_ROLE, owner.address);
+    await pm.grantRole(FREE_RIDER_ROLE, owner.address);
+   // await exchange.grantRole(UNIT_ROLE, owner.address);
 
-    let tx = await (await exchange.payout()).wait();
+    let tx = await (await pm.balance()).wait();
     console.log(`Hash: ${tx.transactionHash}`);
     console.log(`Gas Used: ${tx.gasUsed.toString()}`);
     console.log('payout completed');

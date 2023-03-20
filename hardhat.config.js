@@ -7,6 +7,7 @@ require("@nomiclabs/hardhat-ethers");
 require('./utils/hardhat-ovn');
 require('dotenv').config()
 require('hardhat-contract-sizer');
+require("hardhat-deploy-tenderly");
 
 module.exports = {
   solidity: {
@@ -73,6 +74,10 @@ module.exports = {
     strict: false,
     only: [],
     except: []
+  },
+  tenderly: {
+    project: "project",
+    username: "CryptoCult"
   }
 };
 

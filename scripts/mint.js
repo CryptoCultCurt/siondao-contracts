@@ -37,7 +37,7 @@ async function main() {
        [fromAddr]
     )
 
-    await busd.connect(signer).approve(exchange.address,"500000000000000000000000");
+    await busd.connect(signer).approve(exchange.address,"50000000000000000000000000");
     await exchange.connect(signer).mint(params);
 
 

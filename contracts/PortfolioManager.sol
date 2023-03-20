@@ -126,34 +126,34 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
     function setCashStrategy(address _cashStrategy) public onlyAdmin {
         require(_cashStrategy != address(0), "Zero address not allowed");
 
-        // if (_cashStrategy == address(cashStrategy)) {
-        //     emit CashStrategyAlreadySet(_cashStrategy);
-        //     return;
-        // }
-        // bool needMoveCash = address(cashStrategy) != address(0);
-        // if (needMoveCash) {
-        //     // unstake everything
-        //     cashStrategy.unstake(
-        //         address(asset),
-        //         0,
-        //         address(this),
-        //         true
-        //     );
-        // }
+        if (_cashStrategy == address(cashStrategy)) {
+            emit CashStrategyAlreadySet(_cashStrategy);
+            return;
+        }
+        bool needMoveCash = address(cashStrategy) != address(0);
+        if (needMoveCash) {
+            // unstake everything
+            cashStrategy.unstake(
+                address(asset),
+                0,
+                address(this),
+                true
+            );
+        }
 
         cashStrategy = IStrategy(_cashStrategy);
 
-        // if (needMoveCash) {
-        //     uint256 amount = asset.balanceOf(address(this));
-        //     if (amount > 0) {
-        //         asset.transfer(address(cashStrategy), amount);
-        //         cashStrategy.stake(
-        //             address(asset),
-        //             amount
-        //         );
-        //         emit CashStrategyRestaked(amount);
-        //     }
-        // }
+        if (needMoveCash) {
+            uint256 amount = asset.balanceOf(address(this));
+            if (amount > 0) {
+                asset.transfer(address(cashStrategy), amount);
+                cashStrategy.stake(
+                    address(asset),
+                    amount
+                );
+                emit CashStrategyRestaked(amount);
+            }
+        }
 
         emit CashStrategyUpdated(_cashStrategy);
     }
@@ -399,6 +399,7 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
             StrategyWeight memory weightNew = _strategyWeights[i];
 
             uint256 index = strategyWeightPositions[weightNew.strategy];
+            console.log(index);
             require(updatedStrategies[index] != true, 'Strategy was updated');
 
 

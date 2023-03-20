@@ -29,6 +29,8 @@ module.exports = async () => {
     console.log("exchange.setMark2Market done");
     tx = await exchange.setProfitRecipient(constants.wallet);
 
+    await exchange.setAbroad(607255,1001140);
+
 
 };
 

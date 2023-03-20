@@ -421,8 +421,8 @@ library ThenaLibrary {
         uint256 denominator1
     ) internal view returns (uint256 amountLpTokens) {
         amountLpTokens = (totalAmountLpTokens * amount0Total * denominator1) / (reserve0 * denominator1 + reserve1 * denominator0);
-        console.log('getAmountLPTokens');
-        console.log('r1: %s amountLp %s totalAmountLp %s', reserve1, amountLpTokens,totalAmountLpTokens);
+      //  console.log('getAmountLPTokens');
+       // console.log('r1: %s amountLp %s totalAmountLp %s', reserve1, amountLpTokens,totalAmountLpTokens);
         uint256 amount1 = reserve1 * amountLpTokens / totalAmountLpTokens;
         uint256 amount0 = getAmountOut(router, token1, token0, isStable, amount1);
         amountLpTokens = (totalAmountLpTokens * amount0Total * amount1) / (reserve0 * amount1 + reserve1 * amount0);
@@ -475,7 +475,8 @@ library ThenaLibrary {
         routes[1].from = middleToken;
         routes[1].to = outputToken;
         routes[1].stable = isStable1;
-
+       // console.log('thena swap amountIn: %s out: %s',amountIn,amountOutMin);
+        console.log('route %s to %s to %s',inputToken,middleToken,outputToken);
         return router.swapExactTokensForTokens(
             amountIn,
             amountOutMin,

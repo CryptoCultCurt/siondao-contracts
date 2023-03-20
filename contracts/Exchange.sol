@@ -22,7 +22,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     bytes32 public constant PORTFOLIO_AGENT_ROLE = keccak256("PORTFOLIO_AGENT_ROLE");
     bytes32 public constant UNIT_ROLE = keccak256("UNIT_ROLE");
 
-    uint256 public constant LIQ_DELTA_DM   = 1000000; // 1e6
+    uint256 public constant LIQ_DELTA_DM   = 1000000000000000000; // 1e6
     uint256 public constant FISK_FACTOR_DM = 100000;  // 1e5
 
 
@@ -87,11 +87,10 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     event EventExchange(string label, uint256 amount, uint256 fee, address sender, string referral);
     event PayoutEvent(
-        uint256 profit,
-        uint256 newLiquidityIndex,
-        uint256 excessProfit,
-        uint256 insurancePremium,
-        uint256 insuranceLoss
+        uint256 totalUsdPlus,
+        uint256 totalAsset,
+        uint256 totallyAmountPaid,
+        uint256 newLiquidityIndex
     );
     event PaidBuyFee(uint256 amount, uint256 feeAmount);
     event PaidRedeemFee(uint256 amount, uint256 feeAmount);
@@ -180,7 +179,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
         payoutTimeRange = 15 * 60;
 
-        abroadMin = 1000100;
+        abroadMin = 999760;
         abroadMax = 1000350;
 
         _setRoleAdmin(FREE_RIDER_ROLE, PORTFOLIO_AGENT_ROLE);
@@ -451,9 +450,10 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
 
     function payout() external whenNotPaused onlyUnit {
-        if (block.timestamp + payoutTimeRange < nextPayoutTime) {
-            return;
-        }
+        // if (block.timestamp + payoutTimeRange < nextPayoutTime) {
+        //     return;
+        // }
+        // **** TEMP REMOVED TIMESTAMP CHECK SO IT CAN BE CALLED DURING DEV
 
         // 0. call claiming reward and balancing on PM
         // 1. get current amount of USD+
@@ -463,102 +463,142 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
         portfolioManager.claimAndBalance();
 
-        uint256 totalUsdPlus = usdPlus.totalSupply();
-        uint256 previousUsdPlus = totalUsdPlus;
+        /// NEW SIMPLIFIED
+        uint256 totalUsdPlusSupplyRay = usdPlus.scaledTotalSupply();
+        uint256 totalUsdPlusSupply = totalUsdPlusSupplyRay.rayToWad();
+        uint256 totalAsset = mark2market.totalNetAssets();
 
-        uint256 totalNav = _assetToRebase(mark2market.totalNetAssets());
-        uint256 excessProfit;
-        uint256 premium;
-        uint256 loss;
-
-        uint256 newLiquidityIndex;
-        uint256 delta;
-
-        if (totalUsdPlus > totalNav) {
-
-            // Negative rebase
-            // USD+ have loss and we need to execute next steps:
-            // 1. Loss may be related to oracles: we wait
-            // 2. Loss is real then compensate all loss + [1] bps
-
-            loss = totalUsdPlus - totalNav;
-            uint256 oracleLossAmount = totalUsdPlus * oracleLoss / oracleLossDenominator;
-
-            if(loss <= oracleLossAmount){
-                revert('OracleLoss');
-            }else {
-                loss += totalUsdPlus * compensateLoss / compensateLossDenominator;
-                loss = _rebaseToAsset(loss);
-            //    IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
-                portfolioManager.deposit();
-            }
-
+        uint256 assetDecimals = IERC20Metadata(address(usdc)).decimals();
+        uint256 usdPlusDecimals = usdPlus.decimals();
+        if (assetDecimals > usdPlusDecimals) {
+            totalAsset = totalAsset / (10 ** (assetDecimals - usdPlusDecimals));
         } else {
-
-            // Positive rebase
-            // USD+ have profit and we need to execute next steps:
-            // 1. Pay premium to Insurance
-            // 2. If profit more max delta then transfer excess profit to OVN wallet
-
-            premium = _rebaseToAsset((totalNav - totalUsdPlus) * portfolioManager.getTotalRiskFactor() / FISK_FACTOR_DM);
-
-            if(premium > 0){
-                portfolioManager.withdraw(premium);
-                usdc.transfer(insurance, premium);
-                IInsuranceExchange(insurance).premium(premium);
-
-                totalNav = totalNav - _assetToRebase(premium);
-            }
-
-            newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
-            delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
-
-            if (abroadMax < delta) {
-
-                // Calculate the amount of USD+ to hit the maximum delta.
-                // We send the difference to the OVN wallet.
-
-                // How it works?
-                // 1. Calculating target liquidity index
-                // 2. Calculating target usdPlus.totalSupply
-                // 3. Calculating delta USD+ between target USD+ totalSupply and current USD+ totalSupply
-                // 4. Convert delta USD+ from scaled to normal amount
-
-                uint256 currentLiquidityIndex = usdPlus.liquidityIndex();
-                uint256 targetLiquidityIndex = abroadMax * currentLiquidityIndex / LIQ_DELTA_DM;
-                uint256 targetUsdPlusSupplyRay = totalNav.wadToRay().rayDiv(targetLiquidityIndex);
-                uint256 deltaUsdPlusSupplyRay = targetUsdPlusSupplyRay - usdPlus.scaledTotalSupply();
-                excessProfit = deltaUsdPlusSupplyRay.rayMulDown(currentLiquidityIndex).rayToWad();
-
-                // Mint USD+ to OVN wallet
-                require(profitRecipient != address(0), 'profitRecipient address is zero');
-                usdPlus.mint(profitRecipient, excessProfit);
-
-            }
-
+            totalAsset = totalAsset * (10 ** (usdPlusDecimals - assetDecimals));
         }
+
+        uint difference;
+        if (totalAsset <= totalUsdPlusSupply) {
+            difference = totalUsdPlusSupply - totalAsset;
+        } else {
+            difference = totalAsset - totalUsdPlusSupply;
+        }
+
+        uint256 totalAssetSupplyRay = totalAsset.wadToRay();
+        // in ray
+        uint256 newLiquidityIndex = totalAssetSupplyRay.rayDiv(totalUsdPlusSupplyRay);
+        uint256 currentLiquidityIndex = usdPlus.liquidityIndex();
+
+        uint256 delta = (newLiquidityIndex * 1e6) / currentLiquidityIndex;
+        console.log('delta: %s abroadMin: %s',delta,abroadMin);
+        if (delta <= abroadMin) {
+            revert('Delta abroad:min');
+        }
+
+        if (abroadMax <= delta) {
+            revert('Delta abroad:max');
+        }
+        /// END NEW SIMPLIFIED
+
+        // uint256 totalUsdPlus = usdPlus.totalSupply();
+        // uint256 previousUsdPlus = totalUsdPlus;
+
+        // uint256 totalNav = _assetToRebase(mark2market.totalNetAssets());
+        // uint256 excessProfit;
+        // uint256 premium;
+        // uint256 loss;
+
+        // uint256 newLiquidityIndex;
+        // uint256 delta;
+        // console.log('negative check totalUsdPlus: %s totalNav: %s',totalUsdPlus,totalNav);
+        // if (totalUsdPlus > totalNav) {
+
+        //     // Negative rebase
+        //     // USD+ have loss and we need to execute next steps:
+        //     // 1. Loss may be related to oracles: we wait
+        //     // 2. Loss is real then compensate all loss + [1] bps
+
+        //     loss = totalUsdPlus - totalNav;
+        //     uint256 oracleLossAmount = totalUsdPlus * oracleLoss / oracleLossDenominator;
+        //     console.log('negative rebase loss: %s oracleLoss: %s',loss,oracleLossAmount);
+        //     if(loss <= oracleLossAmount){
+        //         revert('OracleLoss');
+        //     }else {
+        //         console.log('doing rebase');
+        //         loss += totalUsdPlus * compensateLoss / compensateLossDenominator;
+        //         console.log('rebase loss amount: %s',loss);
+        //         loss = _rebaseToAsset(loss);
+        //         console.log('amount of loss rebased: %s',loss);
+        //        //compensate IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
+        //         portfolioManager.deposit();
+        //     }
+
+        // } else {
+
+        //     // Positive rebase
+        //     // USD+ have profit and we need to execute next steps:
+        //     // 1. Pay premium to Insurance
+        //     // 2. If profit more max delta then transfer excess profit to OVN wallet
+
+        //     premium = _rebaseToAsset((totalNav - totalUsdPlus) * portfolioManager.getTotalRiskFactor() / FISK_FACTOR_DM);
+
+        //     if(premium > 0){
+        //         portfolioManager.withdraw(premium);
+        //         usdc.transfer(insurance, premium);
+        //        // IInsuranceExchange(insurance).premium(premium);
+
+        //         totalNav = totalNav - _assetToRebase(premium);
+        //     }
+
+        //     newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
+        //     delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
+
+        //     if (abroadMax < delta) {
+
+        //         // Calculate the amount of USD+ to hit the maximum delta.
+        //         // We send the difference to the OVN wallet.
+
+        //         // How it works?
+        //         // 1. Calculating target liquidity index
+        //         // 2. Calculating target usdPlus.totalSupply
+        //         // 3. Calculating delta USD+ between target USD+ totalSupply and current USD+ totalSupply
+        //         // 4. Convert delta USD+ from scaled to normal amount
+
+        //         uint256 currentLiquidityIndex = usdPlus.liquidityIndex();
+        //         uint256 targetLiquidityIndex = abroadMax * currentLiquidityIndex / LIQ_DELTA_DM;
+        //         uint256 targetUsdPlusSupplyRay = totalNav.wadToRay().rayDiv(targetLiquidityIndex);
+        //         uint256 deltaUsdPlusSupplyRay = targetUsdPlusSupplyRay - usdPlus.scaledTotalSupply();
+        //         excessProfit = deltaUsdPlusSupplyRay.rayMulDown(currentLiquidityIndex).rayToWad();
+
+        //         // Mint USD+ to OVN wallet
+        //         require(profitRecipient != address(0), 'profitRecipient address is zero');
+        //         usdPlus.mint(profitRecipient, excessProfit);
+
+        //     }
+
+        // }
 
 
         // In case positive rebase and negative rebase the value changes and we must update it:
         // - totalUsdPlus
         // - totalNav
 
-        totalUsdPlus = usdPlus.totalSupply();
-        totalNav = _assetToRebase(mark2market.totalNetAssets());
+        // totalUsdPlus = usdPlus.totalSupply();
+        // totalNav = _assetToRebase(mark2market.totalNetAssets());
 
-        newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
-        delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
+        // newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
+        // delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
+        // console.log('newLiqudityIndex: %s',newLiquidityIndex);
+        // console.log('delta: %s',delta);
 
-        // Calculating how much users profit after excess fee
-        uint256 profit = totalNav - totalUsdPlus;
+        // console.log('totalNav: %s totalUsdPlus %s',totalNav,totalUsdPlus);
+        // // Calculating how much users profit after excess fee
+        // uint256 profit = totalNav - totalUsdPlus;
 
-        uint256 expectedTotalUsdPlus = previousUsdPlus + profit + excessProfit;
+        // uint256 expectedTotalUsdPlus = previousUsdPlus + profit + excessProfit;
 
         // set newLiquidityIndex
         usdPlus.setLiquidityIndex(newLiquidityIndex);
 
-        require(usdPlus.totalSupply() == totalNav,'total != nav');
-        require(usdPlus.totalSupply() == expectedTotalUsdPlus, 'total != expected');
 
         // notify listener about payout done
         if (address(payoutListener) != address(0)) {
@@ -566,11 +606,10 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         }
 
         emit PayoutEvent(
-            profit,
-            newLiquidityIndex,
-            excessProfit,
-            premium,
-            loss
+           totalUsdPlusSupply,
+            totalAsset,
+            difference,
+            newLiquidityIndex
         );
 
         // Update next payout time. Cycle for preventing gaps
