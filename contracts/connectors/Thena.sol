@@ -439,6 +439,8 @@ library ThenaLibrary {
     ) internal returns (uint256) {
 
         IERC20(inputToken).approve(address(router), amountIn);
+        //console.log('thena token in: %s out %s',inputToken,outputToken);
+        console.log('thena swap in: %s out %s',amountIn,amountOutMin);
 
         IRouter.route[] memory routes = new IRouter.route[](1);
         routes[0].from = inputToken;
@@ -476,7 +478,7 @@ library ThenaLibrary {
         routes[1].to = outputToken;
         routes[1].stable = isStable1;
        // console.log('thena swap amountIn: %s out: %s',amountIn,amountOutMin);
-        console.log('route %s to %s to %s',inputToken,middleToken,outputToken);
+     //   console.log('route %s to %s to %s',inputToken,middleToken,outputToken);
         return router.swapExactTokensForTokens(
             amountIn,
             amountOutMin,

@@ -28,8 +28,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
         targetWeight: 0,
         maxWeight: 10000,
         riskFactor: 0,
-        enabled: "true",
-        enabledReward: "true",
+        enabled: "false",
+        enabledReward: "false",
     }
 
     let strategy2 = {
@@ -83,7 +83,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
    await (await pm.setStrategyWeights(weights)).wait();
     console.log("portfolio.setWeights done");
  //   await (await pm.setCashStrategy(strategyAddr4.address)).wait();
-  // await pm.removeStrategy(strategyAddr.address);
+   await pm.removeStrategy(strategyAddr.address);
 };
 
 module.exports.tags = ['StrategyWeights'];

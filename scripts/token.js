@@ -23,7 +23,6 @@ async function main() {
     const ownerLength = await token.ownerLength();
     const totalMint = await token.totalMint();
     const totalSupply = await token.totalSupply();
-
     console.log(`
 Token Settings:
     name:               ${name}

@@ -4,8 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import "../Strategy.sol";
 import "../connectors/Chainlink.sol";
 import "../connectors/Thena.sol";
-import "../connectors/Wombat.sol";
-
 import "hardhat/console.sol";
 
 contract StrategyThenaUsdtUsdPlus is Strategy {
@@ -35,9 +33,9 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
     IPair public pair;
     IRouter public router;
     IGaugeV2 public gauge;
-    IPool public wombatPool;
+    address public wombatPool;
 
-    IWombatRouter public wombatRouter;
+    address public wombatRouter;
 
     IPriceFeed public oracleBusd;
     IPriceFeed public oracleUsdt;
@@ -63,7 +61,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
     // --- Setters
 
     function setParams(StrategyParams calldata params) external onlyAdmin {
-      //  console.log("set params");
+        console.log("set params");
         busd = IERC20(params.busdToken);
         usdt = IERC20(params.usdtToken);
         usdPlus = IERC20(params.usdPlus);
@@ -72,8 +70,8 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
         pair = IPair(params.pair);
         router = IRouter(params.router);
         gauge = IGaugeV2(params.gauge);
-        wombatPool = IPool(params.wombatPool);
-        wombatRouter = IWombatRouter(params.wombatRouter);
+        wombatPool = address(params.wombatPool);
+        wombatRouter = address(params.wombatRouter);
         oracleBusd = IPriceFeed(params.oracleBusd);
         oracleUsdt = IPriceFeed(params.oracleUsdt);
 
@@ -97,8 +95,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
 
         // the amount of busd to start
         uint256 busdBalance = busd.balanceOf(address(this));
-        // console.log("busd balance");
-        // console.log(busdBalance);
+
 
         // swap busd for usdt    //path/pool/amt/min/to/
         uint256 usdtBalanceOracle = ChainlinkLibrary.convertTokenToToken(
@@ -109,15 +106,21 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             oracleUsdt
         );
 
-        WombatLibrary.swapExactTokensForTokens(
-            wombatRouter,
-            address(busd),
-            address(usdt),
-            address(wombatPool),
-            busdBalance,
-            OvnMath.subBasisPoints(usdtBalanceOracle, swapSlippageBP),
-            address(this)
-        );
+      //  console.log("busd balance: %s slippage: %s" ,busdBalance, swapSlippageBP);
+      //  console.log("oracle: %s",usdtBalanceOracle);
+        console.log("minimum out: %s", OvnMath.subBasisPoints(usdtBalanceOracle, swapSlippageBP));
+
+        ThenaLibrary.swap(
+                router,
+                address(busd),
+                address(usdt),
+                true,
+                busdBalance,
+                //OvnMath.subBasisPoints(usdtBalanceOracle, swapSlippageBP),
+                0,
+                address(this)
+            );
+       
         //console.log("swapped for usdt");
         uint256 usdtQty = usdt.balanceOf(address(this));
        // console.log(usdtQty);
@@ -136,16 +139,17 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             usdPlusDm
         );
 
-        usdPlusSwap = usdPlusSwap / 1000000000000;
-
+           usdPlusSwap = usdPlusSwap / 1000000000000;
+          console.log('usdtQty: %s usdPlusSwap: %s',usdtQty,usdPlusSwap);
 
         ThenaLibrary.swap(
             router,
             address(usdt),
             address(usdPlus),
-            true,
+            pair.isStable(),
             (usdPlusSwap * 1000000000000),
-            OvnMath.subBasisPoints((usdPlusSwap), 180),
+            0,
+            //OvnMath.subBasisPoints((usdPlusSwap), 180),
             address(this)
         );
        
@@ -265,13 +269,14 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
 
         // swap usdt to busd
         uint256 usdtBalance = usdt.balanceOf(address(this));
-        uint256 busdBalanceOut = WombatLibrary.getAmountOut(
-            wombatRouter,
-            address(usdt),
-            address(busd),
-            address(wombatPool),
-            usdtBalance
-        );
+        uint256 busdBalanceOut = ThenaLibrary.getAmountOut(
+                router,
+                address(usdt),
+                address(busd),
+                true,
+                usdtBalance
+            );
+       
         if (busdBalanceOut > 0) {
             uint256 busdBalanceOracle = ChainlinkLibrary.convertTokenToToken(
                 usdtBalance,
@@ -280,11 +285,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                 oracleUsdt,
                 oracleBusd
             );
-            WombatLibrary.swapExactTokensForTokens(
-                wombatRouter,
+            ThenaLibrary.swap(
+                router,
                 address(usdt),
                 address(busd),
-                address(wombatPool),
+                true,
                 usdtBalance,
                 OvnMath.subBasisPoints(busdBalanceOracle, swapSlippageBP),
                 address(this)
@@ -303,8 +308,8 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             usdPlusBalance
         );
         if (busdBalanceOut > 0) {
-            console.log('usd+: %s busd: %s',usdPlusBalance,busdBalanceOut);
-            console.log('router: %s',address(router));
+        //    console.log('usd+: %s busd: %s',usdPlusBalance,busdBalanceOut);
+         //   console.log('router: %s',address(router));
 
             ThenaLibrary.swap(
                 router,
@@ -376,11 +381,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
 
         // swap usdt to busd
         uint256 usdtBalance = usdt.balanceOf(address(this));
-        busdBalanceOut = WombatLibrary.getAmountOut(
-            wombatRouter,
+        busdBalanceOut = ThenaLibrary.getAmountOut(
+            router,
             address(usdt),
             address(busd),
-            address(wombatPool),
+            true,
             usdtBalance
         );
         if (busdBalanceOut > 0) {
@@ -391,11 +396,12 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                 oracleUsdt,
                 oracleBusd
             );
-            WombatLibrary.swapExactTokensForTokens(
-                wombatRouter,
+  
+            ThenaLibrary.swap(
+                router,
                 address(usdt),
                 address(busd),
-                address(wombatPool),
+                true,
                 usdtBalance,
                 OvnMath.subBasisPoints(busdBalanceOracle, swapSlippageBP),
                 address(this)
@@ -443,11 +449,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                     oracleBusd
                 );
             } else {
-                busdBalance += WombatLibrary.getAmountOut(
-                    wombatRouter,
+                busdBalance += ThenaLibrary.getAmountOut(
+                    router,
                     address(usdt),
                     address(busd),
-                    address(wombatPool),
+                    true,
                     usdtBalance
                 );
             }
@@ -464,11 +470,11 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
             );
 
             // convert to busd
-            busdBalance += WombatLibrary.getAmountOut(
-                wombatRouter,
+            busdBalance += ThenaLibrary.getAmountOut(
+                router,
                 address(usdt),
                 address(busd),
-                address(wombatPool),
+                true,
                 usdtToConvert
             );
         }
@@ -508,10 +514,37 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
                 );
             }
         }
+        // sell any stragling tokens
+        if (usdPlus.balanceOf(address(this)) > 0) {
+            console.log('selling %s usdPlus',usdPlus.balanceOf(address(this)));
+            ThenaLibrary.swap(
+                router,
+                address(usdPlus),
+                address(usdt),
+                false,
+                usdPlus.balanceOf(address(this)),
+                OvnMath.subBasisPoints(usdPlus.balanceOf(address(this)), 10),
+                address(this)
+            );
+        }
+        if (usdt.balanceOf(address(this)) > 0) {
+            console.log('selling %s usdt',usdt.balanceOf(address(this)));
+            totalBusd += ThenaLibrary.swap(
+                router,
+                address(usdt),
+                address(busd),
+                true,
+                usdt.balanceOf(address(this)),
+                OvnMath.subBasisPoints(usdt.balanceOf(address(this)), 10),
+                address(this)
+            );
+        }
 
         if (totalBusd > 0) {
             busd.transfer(_to, totalBusd);
         }
+
+        console.log('rewards claimed from USD+: %s',totalBusd);
 
         return totalBusd;
     }

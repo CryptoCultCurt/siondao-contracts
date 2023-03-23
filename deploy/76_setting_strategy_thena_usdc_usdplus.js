@@ -29,7 +29,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
             wombatRouter: BSC.wombatRouter,
             oracleBusd: BSC.chainlinkBusd,
             oracleUsdt: BSC.chainlinkUsdt,
-            usdPlusDm: "1000000000000000000",
+            usdPlusDm: "1000000",
 
         };
 

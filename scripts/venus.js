@@ -42,7 +42,7 @@ async function main() {
     const busd = await util.getERC20ByAddress(busdToken, wallet);
   
     const balance = await vBusd.balanceOf(venusstrat.address);
-    const balanceBusd = await busd.balanceOf(exchange.address);
+    const balanceBusd = await busd.balanceOf(venusstrat.address);
     const nav = await venusstrat.netAssetValue();
  
     console.log(`Balances:
