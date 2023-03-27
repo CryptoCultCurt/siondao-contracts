@@ -21,7 +21,7 @@ async function main() {
 
     const signer = await ethers.getSigner(fromAddr);
   
-    let busd = await getERC20("busd",signer);
+    let busd = await getERC20("usdt",signer);
     let busdBalance = (await busd.balanceOf(fromAddr)).toString();
     console.log(`Sending funds to ${toAddr}`);
     console.log(`${fromAddr} has ${ethers.utils.formatEther(await signer.getBalance())} BNB`);

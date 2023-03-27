@@ -25,6 +25,7 @@ contract StrategyWombexBusd is Strategy {
         address wombatRouter;
         address oracleBusd;
         address oracleUsdc;
+        address usdt;
     }
 
     // --- params
@@ -51,6 +52,9 @@ contract StrategyWombexBusd is Strategy {
 
     uint256 public usdcDm;
     uint256 public busdDm;
+    uint256 public usdtDm;
+
+    IERC20  public usdt;
 
     // --- events
 
@@ -72,6 +76,7 @@ contract StrategyWombexBusd is Strategy {
         usdc = IERC20(params.usdc);
         wom = IERC20(params.wom);
         wmx = IERC20(params.wmx);
+        usdt = IERC20(params.usdt);
 
         lpBusd = IAsset(params.lpBusd);
         wmxLpBusd = IBaseRewardPool(params.wmxLpBusd);
@@ -86,6 +91,7 @@ contract StrategyWombexBusd is Strategy {
 
         busdDm = 10 ** IERC20Metadata(params.busd).decimals();
         usdcDm = 10 ** IERC20Metadata(params.usdc).decimals();
+        usdtDm = 10 ** IERC20Metadata(params.usdt).decimals();
         lpBusdDm = 10 ** IERC20Metadata(params.lpBusd).decimals();
 
         emit StrategyUpdatedParams();
@@ -137,16 +143,16 @@ contract StrategyWombexBusd is Strategy {
         address _beneficiary
     ) internal override returns (uint256) {
 
-        require(_asset == address(busd), "Some token not compatible");
+        require(_asset == address(usdt), "Some token not compatible");
 
-        // calculate swap _amount busd to usdc
-        // uint256 usdcAmountForBusdAmount = WombatLibrary.getAmountOut(
-        //     wombatRouter,
-        //     address(busd),
-        //     address(usdc),
-        //     pool,
-        //     _amount
-        // );
+       // calculate swap _amount busd to usdc
+        uint256 usdcAmountForBusdAmount = WombatLibrary.getAmountOut(
+            wombatRouter,
+            address(busd),
+            address(usdt),
+            pool,
+            _amount
+        );
 
         // get busdAmount for _amount in usdc
         uint256 busdAmount = _amount;
@@ -161,28 +167,28 @@ contract StrategyWombexBusd is Strategy {
         wmxLpBusd.approve(address(poolDepositor), lpBusdAmount);
         poolDepositor.withdraw(address(lpBusd), lpBusdAmount, busdAmount, address(this));
 
-        // swap busd to usdc
-        // uint256 busdBalance = busd.balanceOf(address(this));
-        // uint256 usdcBalanceOut = WombatLibrary.getAmountOut(
-        //     wombatRouter,
-        //     address(busd),
-        //     address(usdc),
-        //     pool,
-        //     busdBalance
-        // );
-        // if (usdcBalanceOut > 0) {
-        //     WombatLibrary.swapExactTokensForTokens(
-        //         wombatRouter,
-        //         address(busd),
-        //         address(usdc),
-        //         pool,
-        //         busdBalance,
-        //         OvnMath.subBasisPoints(_oracleBusdToUsdc(busdBalance), swapSlippageBP),
-        //         address(this)
-        //     );
-        // }
+      //  swap busd to usdt
+        uint256 busdBalance = busd.balanceOf(address(this));
+        uint256 usdtBalanceOut = WombatLibrary.getAmountOut(
+            wombatRouter,
+            address(busd),
+            address(usdt),
+            pool,
+            busdBalance
+        );
+        if (usdtBalanceOut > 0) {
+            WombatLibrary.swapExactTokensForTokens(
+                wombatRouter,
+                address(busd),
+                address(usdt),
+                pool,
+                busdBalance,
+                OvnMath.subBasisPoints(_oracleBusdToUsdc(busdBalance), swapSlippageBP),
+                address(this)
+            );
+        }
 
-        return busd.balanceOf(address(this));
+        return usdt.balanceOf(address(this));
     }
 
     function _unstakeFull(
@@ -190,7 +196,7 @@ contract StrategyWombexBusd is Strategy {
         address _beneficiary
     ) internal override returns (uint256) {
 
-        require(_asset == address(busd), "Some token not compatible");
+       // require(_asset == address(usdt), "Some token not compatible");
 
         // get busd amount min
         uint256 lpBusdBalance = wmxLpBusd.balanceOf(address(this));
@@ -205,27 +211,27 @@ contract StrategyWombexBusd is Strategy {
         poolDepositor.withdraw(address(lpBusd), lpBusdBalance, busdAmountMin, address(this));
 
         // swap busd to usdc
-        //__Strategy_inituint256 busdBalance = busd.balanceOf(address(this));
-        // uint256 usdcBalanceOut = WombatLibrary.getAmountOut(
-        //     wombatRouter,
-        //     address(busd),
-        //     address(usdc),
-        //     pool,
-        //     busdBalance
-        // );
-        // if (usdcBalanceOut > 0) {
-        //     WombatLibrary.swapExactTokensForTokens(
-        //         wombatRouter,
-        //         address(busd),
-        //         address(usdc),
-        //         pool,
-        //         busdBalance,
-        //         OvnMath.subBasisPoints(_oracleBusdToUsdc(busdBalance), swapSlippageBP),
-        //         address(this)
-        //     );
-        // }
+        uint256 busdBalance = busd.balanceOf(address(this));
+        uint256 usdtBalanceOut = WombatLibrary.getAmountOut(
+            wombatRouter,
+            address(busd),
+            address(usdt),
+            pool,
+            busdBalance
+        );
+        if (usdtBalanceOut > 0) {
+            WombatLibrary.swapExactTokensForTokens(
+                wombatRouter,
+                address(busd),
+                address(usdt),
+                pool,
+                busdBalance,
+                OvnMath.subBasisPoints(_oracleBusdToUsdc(busdBalance), swapSlippageBP),
+                address(this)
+            );
+        }
 
-        return busd.balanceOf(address(this));
+        return usdt.balanceOf(address(this));
     }
 
     function netAssetValue() external view override returns (uint256) {
@@ -237,7 +243,7 @@ contract StrategyWombexBusd is Strategy {
     }
 
     function _totalValue(bool nav) internal view returns (uint256) {
-        //uint256 usdcBalance = usdc.balanceOf(address(this));
+        uint256 usdtBalance = usdc.balanceOf(address(this));
         uint256 busdBalance = busd.balanceOf(address(this));
 
         uint256 lpBusdBalance = wmxLpBusd.balanceOf(address(this));
@@ -246,21 +252,21 @@ contract StrategyWombexBusd is Strategy {
             busdBalance += busdAmount;
         }
 
-        // if (busdBalance > 0) {
-        //     if (nav) {
-        //         usdcBalance += _oracleBusdToUsdc(busdBalance);
-        //     } else {
-        //         usdcBalance += WombatLibrary.getAmountOut(
-        //             wombatRouter,
-        //             address(busd),
-        //             address(usdc),
-        //             pool,
-        //             busdBalance
-        //         );
-        //     }
-        //}
+        if (busdBalance > 0) {
+            if (nav) {
+                usdtBalance += _oracleBusdToUsdc(busdBalance);
+            } else {
+                usdtBalance += WombatLibrary.getAmountOut(
+                    wombatRouter,
+                    address(busd),
+                    address(usdt),
+                    pool,
+                    busdBalance
+                );
+            }
+        }
 
-        return busdBalance;
+        return usdtBalance;
     }
 
     function _claimRewards(address _to) internal override returns (uint256) {
@@ -272,7 +278,7 @@ contract StrategyWombexBusd is Strategy {
         }
 
         // sell rewards
-        //uint256 totalUsdc;
+        uint256 totalUsdt;
         uint256 totalBusd;
 
         uint256 womBalance = wom.balanceOf(address(this));
@@ -281,7 +287,7 @@ contract StrategyWombexBusd is Strategy {
                 pancakeRouter,
                 address(wom),
                 address(busd),
-               // address(usdc),
+                address(usdt),
                 womBalance
             );
 
@@ -290,7 +296,7 @@ contract StrategyWombexBusd is Strategy {
                     pancakeRouter,
                     address(wom),
                     address(busd),
-                 //   address(usdc),
+                    address(usdt),
                     womBalance,
                     amountOut * 99 / 100,
                     address(this)
@@ -304,7 +310,7 @@ contract StrategyWombexBusd is Strategy {
                 pancakeRouter,
                 address(wmx),
                 address(busd),
-            //    address(usdc),
+                address(usdt),
                 wmxBalance
             );
 
@@ -313,7 +319,7 @@ contract StrategyWombexBusd is Strategy {
                     pancakeRouter,
                     address(wmx),
                     address(busd),
-                  //  address(usdc),
+                    address(usdt),
                     wmxBalance,
                     amountOut * 99 / 100,
                     address(this)
@@ -322,7 +328,7 @@ contract StrategyWombexBusd is Strategy {
         }
 
         if (totalBusd > 0) {
-            busd.transfer(_to, totalBusd);
+            usdt.transfer(_to, totalBusd);
         }
         console.log('rewards claimed from Wombex: %s',totalBusd);
         return totalBusd;

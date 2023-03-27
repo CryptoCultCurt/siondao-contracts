@@ -41,4 +41,4 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     console.log("Strategy SettingStrategyThenaUsdtUsdPlus setParams done");
 };
 
-module.exports.tags = ['setting','settingstrategy','SettingStrategyThenaUsdtUsdPlus'];
+module.exports.tags = ['settingstrategy','SettingStrategyThenaUsdtUsdPlus'];

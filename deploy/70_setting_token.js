@@ -4,7 +4,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
 
-    const token = await ethers.getContract("TestToken");
+    const token = await ethers.getContract("SionToken");
     const exchange = await ethers.getContract("Exchange");
 
     console.log('token.setExchanger: ' + exchange.address)

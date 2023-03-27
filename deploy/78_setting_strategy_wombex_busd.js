@@ -33,6 +33,7 @@ let pool = '0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0';
     {
         busd: BSC.busd,
         usdc: BSC.usdc,
+        usdt: BSC.usdt,
         wom: wom,
         wmx: wmx,
         lpBusd: lpBusd,
@@ -51,4 +52,4 @@ let pool = '0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0';
     console.log("Strategy Wombex_busd setParams done");
 };
 
-module.exports.tags = ['setting','SettingStrategyWombexBusd'];
+module.exports.tags = ['settingstrategy','SettingStrategyWombexBusd'];

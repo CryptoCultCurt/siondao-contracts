@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "./interfaces/IInsuranceExchange.sol";
 import "./interfaces/IMark2Market.sol";
 import "./interfaces/IPortfolioManager.sol";
-import "./TestToken.sol";
+import "./SionToken.sol";
 import "./libraries/WadRayMath.sol";
 import "./PayoutListener.sol";
 import "./interfaces/IBlockGetter.sol";
@@ -28,7 +28,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     // ---  fields
 
-    TestToken public usdPlus;
+    SionToken public usdPlus;
     IERC20 public usdc; // asset name
 
     IPortfolioManager public portfolioManager; //portfolio manager contract
@@ -73,9 +73,12 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     address public blockGetter;
 
+    SionToken public sionToken;
+    IERC20 public usdt; // asset name
+
     // ---  events
 
-    event TokensUpdated(address usdPlus, address asset);
+    event TokensUpdated(address sionToken, address asset);
     event Mark2MarketUpdated(address mark2market);
     event PortfolioManagerUpdated(address portfolioManager);
     event BuyFeeUpdated(uint256 fee, uint256 feeDenominator);
@@ -87,7 +90,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     event EventExchange(string label, uint256 amount, uint256 fee, address sender, string referral);
     event PayoutEvent(
-        uint256 totalUsdPlus,
+        uint256 totalSionToken,
         uint256 totalAsset,
         uint256 totallyAmountPaid,
         uint256 newLiquidityIndex
@@ -96,7 +99,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     event PaidRedeemFee(uint256 amount, uint256 feeAmount);
     event NextPayoutTime(uint256 nextPayoutTime);
     event OnNotEnoughLimitRedeemed(address token, uint256 amount);
-    event PayoutAbroad(uint256 delta, uint256 deltaUsdPlus);
+    event PayoutAbroad(uint256 delta, uint256 deltaSionToken);
     event Abroad(uint256 min, uint256 max);
     event ProfitRecipientUpdated(address recipient);
     event OracleLossUpdate(uint256 oracleLoss, uint256 denominator);
@@ -205,12 +208,12 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     // ---  setters Admin
 
-    function setTokens(address _usdPlus, address _asset) external onlyAdmin {
-        require(_usdPlus != address(0), "Zero address not allowed");
+    function setTokens(address _sionToken, address _asset) external onlyAdmin {
+        require(_sionToken != address(0), "Zero address not allowed");
         require(_asset != address(0), "Zero address not allowed");
-        usdPlus = TestToken(_usdPlus);
-        usdc = IERC20(_asset);
-        emit TokensUpdated(_usdPlus, _asset);
+        sionToken = SionToken(_sionToken);
+        usdt = IERC20(_asset);
+        emit TokensUpdated(_sionToken, _asset);
     }
 
     function setPortfolioManager(address _portfolioManager) external onlyAdmin {
@@ -311,12 +314,12 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     }
 
     struct MintParams {
-        address asset;   // USDC | BUSD depends at chain
+        address asset;   // USDT
         uint256 amount;  // amount asset
         string referral; // code from Referral Program -> if not have -> set empty
     }
 
-    // Minting USD+ in exchange for an asset
+    // Minting Sion in exchange for an asset
 
     function mint(MintParams calldata params) external whenNotPaused oncePerBlock returns (uint256) {
         console.log("mint!");
@@ -334,18 +337,18 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
      * @param _asset Asset to spend
      * @param _amount Amount of asset to spend
      * @param _referral Referral code
-     * @return Amount of minted USD+ to caller
+     * @return Amount of minted Sion to caller
      */
     function _buy(address _asset, uint256 _amount, string memory _referral) internal returns (uint256) {
         console.log('doing a mint/buy on exchange');
         console.log(_asset);
-        console.log(address(usdc));
+        console.log(address(usdt));
         console.log(_amount);
         console.log('currentbalance:');
-        console.log(usdc.balanceOf(msg.sender));
-        require(_asset == address(usdc), "Only asset available for buy");
+        console.log(usdt.balanceOf(msg.sender));
+        require(_asset == address(usdt), "Only asset available for buy");
 
-        uint256 currentBalance = usdc.balanceOf(msg.sender);
+        uint256 currentBalance = usdt.balanceOf(msg.sender);
         require(currentBalance >= _amount, "Not enough tokens to buy");
 
         require(_amount > 0, "Amount of asset is zero");
@@ -353,11 +356,11 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         uint256 usdPlusAmount = _assetToRebase(_amount);
         console.log('usdPlusAmount');
         console.log(usdPlusAmount);
-        require(usdPlusAmount > 0, "Amount of USD+ is zero");
+        require(usdPlusAmount > 0, "Amount of Sion is zero");
 
-        uint256 _targetBalance = usdc.balanceOf(address(portfolioManager)) + _amount;
-        usdc.transferFrom(msg.sender, address(portfolioManager), _amount);
-        require(usdc.balanceOf(address(portfolioManager)) == _targetBalance, 'pm balance != target');
+        uint256 _targetBalance = usdt.balanceOf(address(portfolioManager)) + _amount;
+        usdt.transferFrom(msg.sender, address(portfolioManager), _amount);
+        require(usdt.balanceOf(address(portfolioManager)) == _targetBalance, 'pm balance != target');
         console.log('calling pm.deposit()');
         portfolioManager.deposit();
 
@@ -365,7 +368,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         uint256 buyAmount;
         (buyAmount, buyFeeAmount) = _takeFee(usdPlusAmount, true);
 
-        usdPlus.mint(msg.sender, buyAmount);
+        sionToken.mint(msg.sender, buyAmount);
 
         emit EventExchange("mint", buyAmount, buyFeeAmount, msg.sender, _referral);
 
@@ -374,13 +377,13 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     /**
      * @param _asset Asset to redeem
-     * @param _amount Amount of USD+ to burn
+     * @param _amount Amount of Sion to burn
      * @return Amount of asset unstacked and transferred to caller
      */
     function redeem(address _asset, uint256 _amount) external whenNotPaused oncePerBlock returns (uint256) {
-        require(_asset == address(usdc), "Only asset available for redeem");
-        require(_amount > 0, "Amount of USD+ is zero");
-       // require(usdPlus.balanceOf(msg.sender) >= _amount, "Not enough tokens to redeem");
+        require(_asset == address(usdt), "Only asset available for redeem");
+        require(_amount > 0, "Amount of Sion is zero");
+       // require(sionToken.balanceOf(msg.sender) >= _amount, "Not enough tokens to redeem");
 
         uint256 assetAmount = _rebaseToAsset(_amount);
         require(assetAmount > 0, "Amount of asset is zero");
@@ -393,10 +396,10 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         portfolioManager.withdraw(redeemAmount);
 
         // Or just burn from sender
-        usdPlus.burn(msg.sender, _amount);
+        sionToken.burn(msg.sender, _amount);
 
-        require(usdc.balanceOf(address(this)) >= redeemAmount, "Not enough for transfer redeemAmount");
-        usdc.transfer(msg.sender, redeemAmount);
+        require(usdt.balanceOf(address(this)) >= redeemAmount, "Not enough for transfer redeemAmount");
+        usdt.transfer(msg.sender, redeemAmount);
 
         emit EventExchange("redeem", redeemAmount, redeemFeeAmount, msg.sender, "");
 
@@ -424,8 +427,8 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     function _rebaseToAsset(uint256 _amount) internal view returns (uint256){
 
-        uint256 assetDecimals = IERC20Metadata(address(usdc)).decimals();
-        uint256 usdPlusDecimals = usdPlus.decimals();
+        uint256 assetDecimals = IERC20Metadata(address(usdt)).decimals();
+        uint256 usdPlusDecimals = sionToken.decimals();
         if (assetDecimals > usdPlusDecimals) {
             _amount = _amount * (10 ** (assetDecimals - usdPlusDecimals));
         } else {
@@ -438,8 +441,8 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     function _assetToRebase(uint256 _amount) internal view returns (uint256){
 
-        uint256 assetDecimals = IERC20Metadata(address(usdc)).decimals();
-        uint256 usdPlusDecimals = usdPlus.decimals();
+        uint256 assetDecimals = IERC20Metadata(address(usdt)).decimals();
+        uint256 usdPlusDecimals = sionToken.decimals();
         if (assetDecimals > usdPlusDecimals) {
             _amount = _amount / (10 ** (assetDecimals - usdPlusDecimals));
         } else {
@@ -456,20 +459,20 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         // **** TEMP REMOVED TIMESTAMP CHECK SO IT CAN BE CALLED DURING DEV
 
         // 0. call claiming reward and balancing on PM
-        // 1. get current amount of USD+
+        // 1. get current amount of Sion
         // 2. get total sum of asset we can get from any source
-        // 3. calc difference between total count of USD+ and asset
-        // 4. update USD+ liquidity index
+        // 3. calc difference between total count of Sion and asset
+        // 4. update Sion liquidity index
 
         portfolioManager.claimAndBalance();
 
         /// NEW SIMPLIFIED
-        uint256 totalUsdPlusSupplyRay = usdPlus.scaledTotalSupply();
-        uint256 totalUsdPlusSupply = totalUsdPlusSupplyRay.rayToWad();
+        uint256 totalSionTokenSupplyRay = sionToken.scaledTotalSupply();
+        uint256 totalSionTokenSupply = totalSionTokenSupplyRay.rayToWad();
         uint256 totalAsset = mark2market.totalNetAssets();
 
-        uint256 assetDecimals = IERC20Metadata(address(usdc)).decimals();
-        uint256 usdPlusDecimals = usdPlus.decimals();
+        uint256 assetDecimals = IERC20Metadata(address(usdt)).decimals();
+        uint256 usdPlusDecimals = sionToken.decimals();
         if (assetDecimals > usdPlusDecimals) {
             totalAsset = totalAsset / (10 ** (assetDecimals - usdPlusDecimals));
         } else {
@@ -477,16 +480,16 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         }
 
         uint difference;
-        if (totalAsset <= totalUsdPlusSupply) {
-            difference = totalUsdPlusSupply - totalAsset;
+        if (totalAsset <= totalSionTokenSupply) {
+            difference = totalSionTokenSupply - totalAsset;
         } else {
-            difference = totalAsset - totalUsdPlusSupply;
+            difference = totalAsset - totalSionTokenSupply;
         }
 
         uint256 totalAssetSupplyRay = totalAsset.wadToRay();
         // in ray
-        uint256 newLiquidityIndex = totalAssetSupplyRay.rayDiv(totalUsdPlusSupplyRay);
-        uint256 currentLiquidityIndex = usdPlus.liquidityIndex();
+        uint256 newLiquidityIndex = totalAssetSupplyRay.rayDiv(totalSionTokenSupplyRay);
+        uint256 currentLiquidityIndex = sionToken.liquidityIndex();
 
         uint256 delta = (newLiquidityIndex * 1e6) / currentLiquidityIndex;
         console.log('delta: %s abroadMin: %s',delta,abroadMin);
@@ -497,107 +500,9 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         if (abroadMax <= delta) {
             revert('Delta abroad:max');
         }
-        /// END NEW SIMPLIFIED
-
-        // uint256 totalUsdPlus = usdPlus.totalSupply();
-        // uint256 previousUsdPlus = totalUsdPlus;
-
-        // uint256 totalNav = _assetToRebase(mark2market.totalNetAssets());
-        // uint256 excessProfit;
-        // uint256 premium;
-        // uint256 loss;
-
-        // uint256 newLiquidityIndex;
-        // uint256 delta;
-        // console.log('negative check totalUsdPlus: %s totalNav: %s',totalUsdPlus,totalNav);
-        // if (totalUsdPlus > totalNav) {
-
-        //     // Negative rebase
-        //     // USD+ have loss and we need to execute next steps:
-        //     // 1. Loss may be related to oracles: we wait
-        //     // 2. Loss is real then compensate all loss + [1] bps
-
-        //     loss = totalUsdPlus - totalNav;
-        //     uint256 oracleLossAmount = totalUsdPlus * oracleLoss / oracleLossDenominator;
-        //     console.log('negative rebase loss: %s oracleLoss: %s',loss,oracleLossAmount);
-        //     if(loss <= oracleLossAmount){
-        //         revert('OracleLoss');
-        //     }else {
-        //         console.log('doing rebase');
-        //         loss += totalUsdPlus * compensateLoss / compensateLossDenominator;
-        //         console.log('rebase loss amount: %s',loss);
-        //         loss = _rebaseToAsset(loss);
-        //         console.log('amount of loss rebased: %s',loss);
-        //        //compensate IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
-        //         portfolioManager.deposit();
-        //     }
-
-        // } else {
-
-        //     // Positive rebase
-        //     // USD+ have profit and we need to execute next steps:
-        //     // 1. Pay premium to Insurance
-        //     // 2. If profit more max delta then transfer excess profit to OVN wallet
-
-        //     premium = _rebaseToAsset((totalNav - totalUsdPlus) * portfolioManager.getTotalRiskFactor() / FISK_FACTOR_DM);
-
-        //     if(premium > 0){
-        //         portfolioManager.withdraw(premium);
-        //         usdc.transfer(insurance, premium);
-        //        // IInsuranceExchange(insurance).premium(premium);
-
-        //         totalNav = totalNav - _assetToRebase(premium);
-        //     }
-
-        //     newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
-        //     delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
-
-        //     if (abroadMax < delta) {
-
-        //         // Calculate the amount of USD+ to hit the maximum delta.
-        //         // We send the difference to the OVN wallet.
-
-        //         // How it works?
-        //         // 1. Calculating target liquidity index
-        //         // 2. Calculating target usdPlus.totalSupply
-        //         // 3. Calculating delta USD+ between target USD+ totalSupply and current USD+ totalSupply
-        //         // 4. Convert delta USD+ from scaled to normal amount
-
-        //         uint256 currentLiquidityIndex = usdPlus.liquidityIndex();
-        //         uint256 targetLiquidityIndex = abroadMax * currentLiquidityIndex / LIQ_DELTA_DM;
-        //         uint256 targetUsdPlusSupplyRay = totalNav.wadToRay().rayDiv(targetLiquidityIndex);
-        //         uint256 deltaUsdPlusSupplyRay = targetUsdPlusSupplyRay - usdPlus.scaledTotalSupply();
-        //         excessProfit = deltaUsdPlusSupplyRay.rayMulDown(currentLiquidityIndex).rayToWad();
-
-        //         // Mint USD+ to OVN wallet
-        //         require(profitRecipient != address(0), 'profitRecipient address is zero');
-        //         usdPlus.mint(profitRecipient, excessProfit);
-
-        //     }
-
-        // }
-
-
-        // In case positive rebase and negative rebase the value changes and we must update it:
-        // - totalUsdPlus
-        // - totalNav
-
-        // totalUsdPlus = usdPlus.totalSupply();
-        // totalNav = _assetToRebase(mark2market.totalNetAssets());
-
-        // newLiquidityIndex = totalNav.wadToRay().rayDiv(usdPlus.scaledTotalSupply());
-        // delta = (newLiquidityIndex * LIQ_DELTA_DM) / usdPlus.liquidityIndex();
-        // console.log('newLiqudityIndex: %s',newLiquidityIndex);
-        // console.log('delta: %s',delta);
-
-        // console.log('totalNav: %s totalUsdPlus %s',totalNav,totalUsdPlus);
-        // // Calculating how much users profit after excess fee
-        // uint256 profit = totalNav - totalUsdPlus;
-
-        // uint256 expectedTotalUsdPlus = previousUsdPlus + profit + excessProfit;
 
         // set newLiquidityIndex
-        usdPlus.setLiquidityIndex(newLiquidityIndex);
+        sionToken.setLiquidityIndex(newLiquidityIndex);
 
 
         // notify listener about payout done
@@ -606,7 +511,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         }
 
         emit PayoutEvent(
-           totalUsdPlusSupply,
+           totalSionTokenSupply,
             totalAsset,
             difference,
             newLiquidityIndex

@@ -12,7 +12,7 @@ async function main() {
     let ethers = hre.ethers;
     const pm = await constants.getContract('PortfolioManager');
     let theToken = await axios.get('https://api.crypto-api.com/api/token/the');
-    let wombatRewardsValue = BigInt(0);
+    let wombatRewardsValue = 0;
     /// MANUALLY ADDED
 
     // wombat
@@ -23,7 +23,7 @@ async function main() {
     let i =0;
     for (reward of rewards[0]) {
         let token = await axios.get(`https://api.crypto-api.com/api/token/contract/${rewards[0][i]}/bsc`);
-        wombatRewardsValue += BigInt(token.data.usdPrice*rewards[1][i]);
+        wombatRewardsValue += token.data.usdPrice*rewards[1][i];
         i++;
     }
 
@@ -32,24 +32,24 @@ async function main() {
     let thenaPool = await ethers.getContractAt(poolAbi, await usdPlus.pair());
     let thenaGauge = await ethers.getContractAt(gaugeAbi, await usdPlus.gauge());
     let usdPlusRewards = await thenaGauge.earned(usdPlus.address);
-    let usdPlusRewardsValue = BigInt(usdPlusRewards*theToken.data.usdPrice);
+    let usdPlusRewardsValue = usdPlusRewards*theToken.data.usdPrice;
+
 
     // thena
     const wUsdr = await constants.getContract("StrategyThenawUsdrUsdc");
     thenaPool = await ethers.getContractAt(poolAbi, await wUsdr.pair());
     thenaGauge = await ethers.getContractAt(gaugeAbi, await wUsdr.gauge());
     let wUsdrRewards = await thenaGauge.earned(wUsdr.address);
-    let wUsdrRewardsValue = BigInt(wUsdrRewards*theToken.data.usdPrice);
+    let wUsdrRewardsValue = wUsdrRewards*theToken.data.usdPrice;
     const totalRewards = wombatRewardsValue+usdPlusRewardsValue+wUsdrRewardsValue;
 
-    const token = await constants.getContract('TestToken');
+    const token = await constants.getContract('SionToken');
     let totalMint = await token.totalMint();
    
     console.log(`Rewards:
     Wombat:     ${ethers.utils.formatEther(wombatRewardsValue)}
-    USD+:       ${ethers.utils.formatEther(usdPlusRewardsValue)}
-    wUsdr:      ${ethers.utils.formatEther(wUsdrRewardsValue)}      
-    Total:      ${ethers.utils.formatEther(totalRewards)}  
+  
+
     Minted:     ${ethers.utils.formatEther(totalMint)}  
     `)
 
