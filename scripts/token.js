@@ -13,7 +13,7 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const token = await constants.getContract('TestToken');
+    const token = await constants.getContract('SionToken');
 
     const decimals = await token.decimals();
     const exchange = await token.exchange();

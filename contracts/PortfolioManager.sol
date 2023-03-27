@@ -286,7 +286,7 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
         // 1) transferring from one strategy to another
         // 2) when execute stake/unstake
 
-        // allowable losses 0.04% = USD+ mint/redeem fee
+        // allowable losses 0.04% = Sion mint/redeem fee
         uint256 minNavExpected = OvnMath.subBasisPoints(m2m.totalNetAssets(), 80); //0.04%
         minNavExpected = minNavExpected - withdrawAmount; // subscribe withdraw amount
         console.log('min nav expected %s',minNavExpected);

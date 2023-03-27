@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./libraries/WadRayMath.sol"; 
 
-contract TestToken is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20MetadataUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+contract SionToken is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20MetadataUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     using WadRayMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -343,7 +343,7 @@ contract TestToken is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC
             currentAllowance = _allowance(sender, _msgSender());
         }
 
-        require(currentAllowance >= transferAmount, "UsdPlusToken: transfer amount exceeds allowance");
+        require(currentAllowance >= transferAmount, "SionToken: transfer amount exceeds allowance");
         unchecked {
             _approve(sender, _msgSender(), currentAllowance - transferAmount);
         }

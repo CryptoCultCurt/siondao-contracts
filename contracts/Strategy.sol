@@ -30,7 +30,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
         swapSlippageBP = 25;
-        navSlippageBP = 25;
+        navSlippageBP = 35;// increased since we use some unique pairs
         stakeSlippageBP = 4;
     }
 
@@ -124,7 +124,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
           //  console.log('withdrawAmount of %s and amount of %s',withdrawAmount,_amount);
             require(withdrawAmount >= _amount, 'Returned value less than requested amount');
         }
-
+      //  console.log('nav: %s minNavExpected: %s',this.netAssetValue(),minNavExpected);
         require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
         IERC20(_asset).transfer(_beneficiary, withdrawAmount);

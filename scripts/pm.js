@@ -19,12 +19,14 @@ async function main() {
     const exchanger = await pm.exchanger();
     const m2m = await pm.m2m();
     const totalRiskFactor = await pm.totalRiskFactor();
+    //const asset = await pm.getAsset();
 
     console.log(`PM Settings:
     cashStrategy:       ${cashStrategy}
     exchanger:          ${exchanger}
     m2m:                ${m2m}
     totalRiskFactor:    ${totalRiskFactor}
+ 
 
     `)
 

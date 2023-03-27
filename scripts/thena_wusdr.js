@@ -24,6 +24,7 @@ async function main() {
 
     let busdToken = await venusstrat.busd();
     let usdcToken = await venusstrat.usdc();
+    let usdtToken = await venusstrat.usdt();
     let wUsdr = await venusstrat.wUsdr();
     let usdcDm = await venusstrat.usdcDm();
     let wUsdrDm = await venusstrat.wUsdrDm();
@@ -37,6 +38,7 @@ async function main() {
     let oracleUsdc = await venusstrat.oracleUsdc();
     
     const busd = await util.getERC20ByAddress(busdToken, wallet);
+    const usdt = await util.getERC20ByAddress(usdtToken, wallet);
     const wUsdrContract = await util.getERC20ByAddress(wUsdr, wallet);
     const portfolioManager = await venusstrat.portfolioManager();
     const PORTFOLIO_MANAGER = await venusstrat.PORTFOLIO_MANAGER();
@@ -71,6 +73,7 @@ async function main() {
     console.log(`\nBalances:
     Net Asset Value:        ${nav/1000000000000000000}
     BUSD Portfolio Manager: ${await busd.balanceOf(pm.address)/1000000000000000000}
+    USDT Portfolio Manager: ${await usdt.balanceOf(pm.address)/1000000000000000000}
     wUsdr Unused:           ${wUsdrBal/1000000000}
     Pool Balance:           ${thenaBal}
     Gauge Balance:          ${gaugeBal}

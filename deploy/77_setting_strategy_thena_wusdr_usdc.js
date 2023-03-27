@@ -30,6 +30,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
             oracleBusd: BSC.chainlinkBusd,
             oracleUsdc: BSC.chainlinkUsdc,
             wUsdrDm: "1000000000",
+            usdtToken: BSC.usdt,
+            oracleUsdt: BSC.chainlinkUsdt
 
         };
         console.log(params);
@@ -41,4 +43,4 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     console.log("Strategy SettingStrategyThenawUsdrUsdc setParams done");
 };
 
-module.exports.tags = ['setting','SettingStrategyThenawUsdrUsdc'];
+module.exports.tags = ['settingstrategy','SettingStrategyThenawUsdrUsdc'];

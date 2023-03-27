@@ -17,12 +17,14 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
+
     const exchange = await constants.getContract('Exchange');
     const signer = await ethers.getSigner(wallet);
-    const busd = await util.getERC20("busd",signer);
+    const usdt = await util.getERC20("usdt",signer);
+    console.log(`Wallet USDT: ${await usdt.balanceOf(wallet)/1000000000000000000}`)
 
-    let asset = busd.address; 
-    let amount = "1000000000000000000000"; // 5000
+    let asset = usdt.address; 
+    let amount = "500000000000000000000"; // 5000
     let referral = "";
     let params = [
         asset,
@@ -37,7 +39,7 @@ async function main() {
        [fromAddr]
     )
 
-    await busd.connect(signer).approve(exchange.address,"50000000000000000000000000");
+    await usdt.connect(signer).approve(exchange.address,"50000000000000000000000000");
     await exchange.connect(signer).mint(params);
 
 

@@ -20,6 +20,7 @@ async function main() {
     const pm = await constants.getContract('PortfolioManager');
 
     let busdToken = await venusstrat.busd();
+    let usdtToken = await venusstrat.usdt();
     let lpBusdToken = await venusstrat.lpBusd();
     let poolDepositor = await venusstrat.poolDepositor();
     let  wombatRouter =  await venusstrat.wombatRouter();
@@ -45,9 +46,11 @@ async function main() {
 
     const wmxContract = await ethers.getContractAt(wmxLPABI, wmxLpToken);
     const busd = await util.getERC20ByAddress(busdToken, venusstrat.address);
-  
+    const usdt = await util.getERC20ByAddress(usdtToken, venusstrat.address);
+    const usdPlus = await util.getERC20ByAddress("0xe80772Eaf6e2E18B651F160Bc9158b2A5caFCA65", venusstrat.address);
     const balance =     await wmxContract.balanceOf(venusstrat.address);
     const balanceBusd = await busd.balanceOf(exchange.address);
+    const balanceUsdt = await usdt.balanceOf(exchange.address);
     const nav =  await venusstrat.netAssetValue();
 
     let rewards = await wmxContract.claimableRewards(venusstrat.address);
@@ -56,8 +59,11 @@ async function main() {
     console.log(`Balances:
     wmx:                    ${balance}
     BUSD:                   ${balanceBusd}
+    USDT:                   ${balanceUsdt}
     Net Asset Value:        ${nav}
     BUSD Portfolio Manager: ${await busd.balanceOf(pm.address)}
+    USDT Portfolio Manager: ${await usdt.balanceOf(pm.address)}
+    USD+ PM:                ${await usdPlus.balanceOf(pm.address)}
     Rewards:                `)
     for (reward of rewards[0]) {
         let token = await axios.get(`https://api.crypto-api.com/api/token/contract/${rewards[0][i]}/bsc`);

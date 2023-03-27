@@ -9,7 +9,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         "http://localhost:8545"
       );
-    let wallet = constants.wallet;
+    let wallet = "0x10444014ba4831fa355bc57b2d30a383baa11285";//constants.wallet;
     const [owner,deployer,third] = await ethers.getSigners();
     const { chainId } = await ethers.provider.getNetwork();
     console.log(`\nOwner:       ${owner.address}`);
@@ -18,12 +18,13 @@ async function main() {
     console.log(`Chain:       ${chainId}`);
 
     const exchange = await constants.getContract('Exchange');
-    let busd = await util.getERC20("busd");
+    let usdt = await util.getERC20("usdt");
+
     
-    let amount = "1000000000000000000000"; // 5000
+    let amount = "7000000000000000000000"; // 5000
     let referral = "";
     let params = [
-        busd.address,
+        usdt.address,
         amount,
         referral
     ]
@@ -36,7 +37,7 @@ async function main() {
     )
 
     const signer = await ethers.getSigner(wallet);
-    await exchange.connect(signer).redeem(busd.address,"980000000000000000");
+    await exchange.connect(signer).redeem(usdt.address,amount);
 
 
 }

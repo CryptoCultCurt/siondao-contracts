@@ -11,7 +11,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let params = {args: ["SION", "SION Dao", 18]};
     
    // await deployProxy('Lock', deployments, save, params);
-    await deployProxy('TestToken', deployments, save, params)
+    await deployProxy('SionToken', deployments, save, params)
   //  let usdPlus = await ethers.getContract('Lock');
 
     console.log('Token deployed')

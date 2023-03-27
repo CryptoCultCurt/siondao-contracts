@@ -10,7 +10,7 @@ module.exports = async () => {
     const m2m = await ethers.getContract("Mark2Market");
     const pm = await ethers.getContract("PortfolioManager");
 
-    let asset = BSC.busd;
+    let asset = BSC.usdt;
 
     console.log("exchange.setToken: token " + token.address + " asset: " + asset);
     let tx = await exchange.setTokens(token.address, asset);
@@ -29,7 +29,7 @@ module.exports = async () => {
     console.log("exchange.setMark2Market done");
     tx = await exchange.setProfitRecipient(constants.wallet);
 
-    await exchange.setAbroad(607255,1001140);
+    await exchange.setAbroad(0,2001140);
 
 
 };
