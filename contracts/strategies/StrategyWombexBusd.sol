@@ -5,7 +5,7 @@ import "../Strategy.sol";
 import "../connectors/Chainlink.sol";
 import "../connectors/Wombex.sol";
 import "../connectors/PancakeV2.sol";
-import {IWombatRouter, WombatLibrary} from '../connectors/Wombat.sol';
+import {IWombatRouter, WombatLibrary,IWombatAsset} from '../connectors/Wombat.sol';
 
 
 contract StrategyWombexBusd is Strategy {
@@ -34,9 +34,9 @@ contract StrategyWombexBusd is Strategy {
     IERC20 public wom;
     IERC20 public wmx;
 
-    IAsset public lpBusd;
-    IBaseRewardPool public wmxLpBusd;
-    IPoolDepositor public poolDepositor;
+    IWombatAsset public lpBusd;
+    IWombexBaseRewardPool public wmxLpBusd;
+    IWombexPoolDepositor public poolDepositor;
     address public pool;
 
     IPancakeRouter02 public pancakeRouter;
@@ -78,9 +78,9 @@ contract StrategyWombexBusd is Strategy {
         wmx = IERC20(params.wmx);
         usdt = IERC20(params.usdt);
 
-        lpBusd = IAsset(params.lpBusd);
-        wmxLpBusd = IBaseRewardPool(params.wmxLpBusd);
-        poolDepositor = IPoolDepositor(params.poolDepositor);
+        lpBusd = IWombatAsset(params.lpBusd);
+        wmxLpBusd = IWombexBaseRewardPool(params.wmxLpBusd);
+        poolDepositor = IWombexPoolDepositor(params.poolDepositor);
         pool = params.pool;
 
         pancakeRouter = IPancakeRouter02(params.pancakeRouter);

@@ -6,7 +6,7 @@ let {DEFAULT, BSC, OPTIMISM, COMMON, ARBITRUM} = require('../utils/assets');
 module.exports = async () => {
 
     const exchange = await ethers.getContract("Exchange");
-    const token = await ethers.getContract("TestToken");
+    const token = await ethers.getContract("SionToken");
     const m2m = await ethers.getContract("Mark2Market");
     const pm = await ethers.getContract("PortfolioManager");
 
@@ -29,7 +29,7 @@ module.exports = async () => {
     console.log("exchange.setMark2Market done");
     tx = await exchange.setProfitRecipient(constants.wallet);
 
-    await exchange.setAbroad(0,2001140);
+   // await exchange.setAbroad(0,2001140);
 
 
 };

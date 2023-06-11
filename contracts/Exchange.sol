@@ -383,7 +383,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     function redeem(address _asset, uint256 _amount) external whenNotPaused oncePerBlock returns (uint256) {
         require(_asset == address(usdt), "Only asset available for redeem");
         require(_amount > 0, "Amount of Sion is zero");
-       // require(sionToken.balanceOf(msg.sender) >= _amount, "Not enough tokens to redeem");
+        require(sionToken.balanceOf(msg.sender) >= _amount, "Not enough tokens to redeem");
 
         uint256 assetAmount = _rebaseToAsset(_amount);
         require(assetAmount > 0, "Amount of asset is zero");

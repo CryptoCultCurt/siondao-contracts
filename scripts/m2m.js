@@ -28,8 +28,19 @@ async function main() {
     let weights = await m2m.strategyAssets();
     let i=0;
     for (const weight of weights) {
+        const strategy = await constants.getContractAt("StrategyWombexUsdt",weight.strategy);
+        let strategyName = "Unknown";
+        try {
+            strategyName = await strategy.name();
+            console.log(await strategy.name());
+        } catch (e) {
+            console.log('failed to get name');
+            console.log(e);
+        }
+
         console.log(`Strategy#${i}:
-        Strategy:               ${weight.strategy}
+        Strategy                ${strategyName}  
+        Address:                ${weight.strategy}
         netAssetValue:          ${constants.toDec18(weight.netAssetValue).toString()}
         liquidationValue:       ${constants.toDec18(weight.liquidationValue).toString()}
         `)

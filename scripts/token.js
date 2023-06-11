@@ -18,14 +18,21 @@ async function main() {
     const decimals = await token.decimals();
     const exchange = await token.exchange();
     const liquidityIndex = await token.liquidityIndex();
-    const name = await token.name();
+
 
     const ownerLength = await token.ownerLength();
     const totalMint = await token.totalMint();
     const totalSupply = await token.totalSupply();
+
+    await token.setName("Sion");
+    await token.setSymbol("SION");
+    const name = await token.name();
+    const symbol = await token.symbol();
+
     console.log(`
 Token Settings:
     name:               ${name}
+    symbol:             ${symbol}
     decimals:           ${decimals}
     exchange:           ${exchange}
     liquidityIndex:     ${ethers.utils.formatEther(liquidityIndex)}

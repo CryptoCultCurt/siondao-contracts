@@ -9,7 +9,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         "http://localhost:8545"
       );
-    let wallet = "0x10444014ba4831fa355bc57b2d30a383baa11285";//constants.wallet;
+    let wallet = "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341";//constants.wallet;
     const [owner,deployer,third] = await ethers.getSigners();
     const { chainId } = await ethers.provider.getNetwork();
     console.log(`\nOwner:       ${owner.address}`);
@@ -21,7 +21,7 @@ async function main() {
     let usdt = await util.getERC20("usdt");
 
     
-    let amount = "7000000000000000000000"; // 5000
+    let amount = "20000000000000000000000"; // 5000
     let referral = "";
     let params = [
         usdt.address,

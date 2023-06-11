@@ -16,33 +16,14 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const strategy = await constants.getContract('StrategyThenawUsdrUsdc');
+    //const strategy = await constants.getContract('StrategyThenawUsdrUsdc');
     //const strategy = await constants.getContract('StrategyThenaUsdtUsdPlus');
 
-    const pm = await constants.getContract('PortfolioManager');
- 
-    const busd = await util.getERC20("busd");
+    const token = await constants.getContract('SionToken');
+    const EXCHANGER = await token.EXCHANGER();
+    await token.grantRole(EXCHANGER,signer.address);
+    await token.mint(signer.address,"5000000000000000000000");
 
-    let asset = busd.address; 
-    let amount = "100000000000"; // 5000
-    let beneficiary = wallet;
-   
-
-    let fromAddr = wallet;
-    const signer = await ethers.getSigner(fromAddr);
-    const nav = await strategy.netAssetValue();
-    console.log(nav.toString())
-    await provider.send(
-        "hardhat_impersonateAccount",
-       [fromAddr]
-    )
-    
-    const PORTFOLIO_MANAGER = await strategy.PORTFOLIO_MANAGER();
-    await strategy.grantRole(PORTFOLIO_MANAGER, signer.address);
-
-
-
-    await strategy.connect(signer).unstake(asset,amount,beneficiary,false);
 
 
 }

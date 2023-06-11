@@ -20,6 +20,7 @@ async function main() {
     const pm = await constants.getContract('PortfolioManager');
 
     let usdtToken = await venusstrat.usdt();
+    let busdToken = await venusstrat.busd();
     let lpUsdtToken = await venusstrat.lpUsdt();
     let poolDepositor = await venusstrat.poolDepositor();
     let  wombatRouter =  await venusstrat.wombatRouter();
@@ -35,6 +36,7 @@ async function main() {
 
     console.log(`\nVenusBUSD Strategy:
     USDT:           ${usdtToken}
+    BUSD:           ${busdToken}        
     lpUsdtToken:    ${lpUsdtToken}
     poolDepositor:  ${poolDepositor}
     wombatRouter:   ${wombatRouter}
@@ -60,7 +62,6 @@ async function main() {
     BUSD:                   ${balanceBusd}
     USDT:                   ${balanceUsdt}
     Net Asset Value:        ${nav}
-    BUSD Portfolio Manager: N/A
     USDT Portfolio Manager: ${await usdt.balanceOf(pm.address)}
     USD+ PM:                ${await usdPlus.balanceOf(pm.address)}
     Rewards:                `)

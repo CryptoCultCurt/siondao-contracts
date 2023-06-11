@@ -7,6 +7,11 @@ async function getContract(contract) {
     return PM.attach(address.address);
 }
 
+async function getContractAt(contract,address) {
+    const PM = await ethers.getContractFactory(contract);
+    return await PM.attach(address);
+}
+
 function toDec18(number,decimals) {
     return number/1000000000000000000
 }
@@ -16,3 +21,4 @@ module.exports.wallet = wallet;
 module.exports.whale = whale;
 module.exports.getContract = getContract;
 module.exports.toDec18 = toDec18;
+module.exports.getContractAt = getContractAt;

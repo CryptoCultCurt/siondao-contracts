@@ -1,14 +1,12 @@
 require("@nomicfoundation/hardhat-toolbox");
-require('@openzeppelin/hardhat-upgrades');
-require("@nomiclabs/hardhat-etherscan");
+// require('@openzeppelin/hardhat-upgrades');
+// require("@nomiclabs/hardhat-etherscan");
 require("hardhat-gas-reporter");
-require('hardhat-deploy');
+// require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers");
 require('./utils/hardhat-ovn');
 require('dotenv').config()
-require('hardhat-contract-sizer');
-require("hardhat-deploy-tenderly");
-
+// require('hardhat-contract-sizer');
 module.exports = {
   solidity: {
     version: "0.8.17",

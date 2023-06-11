@@ -89,7 +89,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
     function stake(
         address _asset,
         uint256 _amount
-    ) external override  {
+    ) external override onlyPortfolioManager {
        // console.log('stake called in strategy');
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
@@ -98,8 +98,8 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         // console.log('stake results');
         // console.log(this.netAssetValue());
         // console.log(minNavExpected);
-
-       // require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
+        // **************** REMOVED UNTIL PAYOUT DONE
+        //require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
         emit Stake(_amount);
     }
@@ -109,7 +109,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         uint256 _amount,
         address _beneficiary,
         bool _targetIsZero
-    ) external override  returns (uint256) {
+    ) external override onlyPortfolioManager returns (uint256) {
      //   console.log("strategey unstake");
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
@@ -125,7 +125,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
             require(withdrawAmount >= _amount, 'Returned value less than requested amount');
         }
       //  console.log('nav: %s minNavExpected: %s',this.netAssetValue(),minNavExpected);
-        require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
+        //require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
         IERC20(_asset).transfer(_beneficiary, withdrawAmount);
 
@@ -137,7 +137,7 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         return withdrawAmount;
     }
 
-    function claimRewards(address _to) external override  returns (uint256) {
+    function claimRewards(address _to) external override onlyPortfolioManager returns (uint256) {
         uint256 rewardAmount = _claimRewards(_to);
         if (rewardAmount > 0) {
             emit Reward(rewardAmount);

@@ -5,6 +5,7 @@ import "../Strategy.sol";
 import "../connectors/Chainlink.sol";
 import "../connectors/Thena.sol";
 import "hardhat/console.sol";
+import {IWombatRouter, WombatLibrary} from '../connectors/Wombat.sol';
 
 contract StrategyThenaUsdtUsdPlus is Strategy {
     // --- structs
@@ -35,7 +36,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
     IGaugeV2 public gauge;
     address public wombatPool;
 
-    address public wombatRouter;
+    IWombatRouter public wombatRouter;
 
     IPriceFeed public oracleBusd;
     IPriceFeed public oracleUsdt;
@@ -71,7 +72,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
         router = IRouter(params.router);
         gauge = IGaugeV2(params.gauge);
         wombatPool = address(params.wombatPool);
-        wombatRouter = address(params.wombatRouter);
+       wombatRouter = IWombatRouter(params.wombatRouter);
         oracleBusd = IPriceFeed(params.oracleBusd);
         oracleUsdt = IPriceFeed(params.oracleUsdt);
 
@@ -102,92 +103,93 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
         //console.log(usdPlusDm);
 
         // get swap amounts for the pair
-        uint256 usdPlusSwap = ThenaLibrary.getAmountToSwap(
-            router,
-            address(usdt),
-            address(usdPlus),
-            pair.isStable(),
-            usdtQty,
-            reserveUsdt,
-            reserveUsdPlus,
-            usdtDm,
-            usdPlusDm
-        );
-
-           usdPlusSwap = usdPlusSwap / 1000000000000;
-          console.log('usdtQty: %s usdPlusSwap: %s',usdtQty,usdPlusSwap);
-
-        ThenaLibrary.swap(
-            router,
-            address(usdt),
-            address(usdPlus),
-            pair.isStable(),
-            (usdPlusSwap * 1000000000000),
-            0,
-            //OvnMath.subBasisPoints((usdPlusSwap), 180),
-            address(this)
-        );
+    //     address[] memory tokens = new address[](3);
+    //     tokens[0] = address(usdt);
+    //     tokens[1] = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
+    //     tokens[2] = address(usdPlus);
+    //     address[] memory pools = new address[](2);
+    //     pools[0] = 0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0;
+    //     pools[1] = 0x9498563e47D7CFdFa22B818bb8112781036c201C;
+    //     uint256 usdtPlusBalanceOut = WombatLibrary.getMultiAmountOut(
+    //         wombatRouter,
+    //         tokens,
+    //         pools,
+    //         usdtQty
+    //     );
+      
+    //    console.log('**usdtPlus Balance out %s',usdtPlusBalanceOut);
+    //    if (usdtPlusBalanceOut > 0) {
+    //     console.log('wombat Router: %s transfer: %s',address(wombatRouter),usdtPlusBalanceOut);
+    //         WombatLibrary.multiSwap(
+    //             wombatRouter,
+    //             tokens,
+    //             pools,
+    //             usdtQty,
+    //             OvnMath.subBasisPoints((usdtQty), 180),
+    //             address(this)
+    //         );
+    //    }
        
-        // usdtQty will the amount returned from selling the busd
+    //     // usdtQty will the amount returned from selling the busd
 
-        uint256 usdPlusQty = usdPlus.balanceOf(address(this));
-        usdtQty = usdt.balanceOf(address(this));
+    //     uint256 usdPlusQty = usdPlus.balanceOf(address(this));
+    //     usdtQty = usdt.balanceOf(address(this));
 
-        usdt.approve(address(router), usdtQty);
-        usdPlus.approve(address(router), usdPlusQty);
+    //     usdt.approve(address(router), usdtQty);
+    //     usdPlus.approve(address(router), usdPlusQty);
 
-        uint256 output = ThenaLibrary.getAmountOut(
-            router,
-            address(usdt),
-            address(usdPlus),
-            pair.isStable(),
-            usdtQty
-        );
+    //     uint256 output = ThenaLibrary.getAmountOut(
+    //         router,
+    //         address(usdt),
+    //         address(usdPlus),
+    //         pair.isStable(),
+    //         usdtQty
+    //     );
 
-        if (output > usdPlusQty) {
-            //   console.log("not enough usdPlus");
-            output = ThenaLibrary.getAmountOut(
-                router,
-                address(usdPlus),
-                address(usdt),
-                pair.isStable(),
-                usdPlusQty
-            );
+    //     if (output > usdPlusQty) {
+    //         //   console.log("not enough usdPlus");
+    //         output = ThenaLibrary.getAmountOut(
+    //             router,
+    //             address(usdPlus),
+    //             address(usdt),
+    //             pair.isStable(),
+    //             usdPlusQty
+    //         );
 
-            router.addLiquidity(
-                address(usdt),
-                address(usdPlus),
-                pair.isStable(),
-                output,
-                usdPlusQty,
-                OvnMath.subBasisPoints(output, swapSlippageBP),
-                OvnMath.subBasisPoints(usdPlusQty, swapSlippageBP),
-                address(this),
-                block.timestamp
-            );
-        } else {
-            // console.log("deposit lp");
-            // console.log(usdtQty);
-            // console.log(output);
-            router.addLiquidity(
-                address(usdt),
-                address(usdPlus),
-                pair.isStable(),
-                usdtQty,
-                usdPlusQty,
-                0,
-                0,
-                address(this),
-                block.timestamp
-            );
-        }
+    //         router.addLiquidity(
+    //             address(usdt),
+    //             address(usdPlus),
+    //             pair.isStable(),
+    //             output,
+    //             usdPlusQty,
+    //             OvnMath.subBasisPoints(output, swapSlippageBP),
+    //             OvnMath.subBasisPoints(usdPlusQty, swapSlippageBP),
+    //             address(this),
+    //             block.timestamp
+    //         );
+    //     } else {
+    //         // console.log("deposit lp");
+    //         // console.log(usdtQty);
+    //         // console.log(output);
+    //         router.addLiquidity(
+    //             address(usdt),
+    //             address(usdPlus),
+    //             pair.isStable(),
+    //             usdtQty,
+    //             usdPlusQty,
+    //             0,
+    //             0,
+    //             address(this),
+    //             block.timestamp
+    //         );
+    //     }
 
-        // deposit to gauge
-        uint256 lpBalance = pair.balanceOf(address(this));
-        // console.log("lpBalance");
-        // console.log(lpBalance);
-        pair.approve(address(gauge), lpBalance);
-        gauge.deposit(lpBalance);
+    //     // deposit to gauge
+    //     uint256 lpBalance = pair.balanceOf(address(this));
+    //     // console.log("lpBalance");
+    //     // console.log(lpBalance);
+    //     pair.approve(address(gauge), lpBalance);
+    //     gauge.deposit(lpBalance);
     }
 
     function _unstake(
@@ -202,7 +204,7 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
         (uint256 reserveUsdt, uint256 reserveUsdPlus, ) = pair.getReserves();
 
         uint256 lpTokensToWithdraw = ThenaLibrary.getAmountLpTokens(
-            router,
+            IRouter(router),
             address(usdt),
             address(usdPlus),
             pair.isStable(),
@@ -246,27 +248,33 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
 
         // swap usdPlus to usdt 
         uint256 usdPlusBalance = usdPlus.balanceOf(address(this));
-        uint256 usdtBalanceOut = ThenaLibrary.getAmountOut(
-            router,
-            address(usdPlus),
-            address(usdt),
-            pair.isStable(),
+
+        address[] memory tokens = new address[](3);
+        tokens[0] = address(usdPlus);
+        tokens[1] = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
+        tokens[2] = address(usdt);
+        address[] memory pools = new address[](2);
+        pools[0] = 0x9498563e47D7CFdFa22B818bb8112781036c201C;
+        pools[1] = 0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0;
+        uint256 usdtPlusBalanceOut = WombatLibrary.getMultiAmountOut(
+            wombatRouter,
+            tokens,
+            pools,
             usdPlusBalance
         );
-        if (usdtBalanceOut > 0) {
-        //    console.log('usd+: %s busd: %s',usdPlusBalance,busdBalanceOut);
-         //   console.log('router: %s',address(router));
-
-            ThenaLibrary.swap(
-                router,
-                address(usdPlus),
-                address(usdt),
-                pair.isStable(),
+      
+       console.log('**usdtPlus Balance out %s',usdtPlusBalanceOut);
+       if (usdtPlusBalanceOut > 0) {
+        console.log('wombat Router: %s transfer: %s',address(wombatRouter),usdtPlusBalanceOut);
+            WombatLibrary.multiSwap(
+                wombatRouter,
+                tokens,
+                pools,
                 usdPlusBalance,
-                OvnMath.subBasisPoints((usdtBalanceOut), 180),
+                OvnMath.subBasisPoints((usdPlusBalance), 180),
                 address(this)
             );
-        }
+       }
 
         return usdt.balanceOf(address(this));
     }
@@ -306,25 +314,35 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
         console.log('tokens removed usdplus: %s usdt: %s', usdPlus.balanceOf(address(this)), usdt.balanceOf(address(this)));
         // swap usdPlus to usdt
         uint256 usdPlusBalance = usdPlus.balanceOf(address(this));
-        uint256 usdtBalanceOut = ThenaLibrary.getAmountOut(
-            router,
-            address(usdPlus),
-            address(usdt),
-            pair.isStable(),
+/// 
+        address[] memory tokens = new address[](3);
+        tokens[0] = address(usdPlus);
+        tokens[1] = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
+        tokens[2] = address(usdt);
+        address[] memory pools = new address[](2);
+        pools[0] = 0x9498563e47D7CFdFa22B818bb8112781036c201C;
+        pools[1] = 0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0;
+        uint256 usdtPlusBalanceOut = WombatLibrary.getMultiAmountOut(
+            wombatRouter,
+            tokens,
+            pools,
             usdPlusBalance
         );
-        console.log('swapping usdPlus %s for %s',usdPlusBalance,usdtBalanceOut);
-        if (usdtBalanceOut > 0) {
-            ThenaLibrary.swap(
-                router,
-                address(usdPlus),
-                address(usdt),
-                pair.isStable(),
+      
+       console.log('**usdtPlus Balance out %s',usdtPlusBalanceOut);
+       if (usdtPlusBalanceOut > 0) {
+        console.log('wombat Router: %s transfer: %s',address(wombatRouter),usdtPlusBalanceOut);
+            WombatLibrary.multiSwap(
+                wombatRouter,
+                tokens,
+                pools,
                 usdPlusBalance,
                 OvnMath.subBasisPoints((usdPlusBalance), 180),
                 address(this)
             );
-        }
+       }
+////
+
 
         return usdt.balanceOf(address(this));
     }
@@ -372,8 +390,8 @@ contract StrategyThenaUsdtUsdPlus is Strategy {
     }
 
     function _claimRewards(address _to) internal override returns (uint256) {
-        //("claimrewards");
         // claim rewards
+        console.log('claim rewards');
         uint256 lpBalance = gauge.balanceOf(address(this));
         if (lpBalance > 0) {
             gauge.getReward();

@@ -119,6 +119,13 @@ contract SionToken is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC
         _decimals = decimals;
     }
 
+    function setName(string memory name) public onlyAdmin{
+        _name = name;
+    }
+
+    function setSymbol(string memory symbol) public onlyAdmin{
+        _symbol = symbol;
+    }
 
     // ---  logic
 
