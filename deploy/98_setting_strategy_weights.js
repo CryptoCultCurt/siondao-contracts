@@ -69,7 +69,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy5 = {
         strategy: strategyAddr5.address,
         minWeight: 0,
-        targetWeight: 30000,
+        targetWeight: 100000,
         maxWeight: 100000,
         riskFactor: 0,
         enabled: true,
@@ -79,7 +79,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let strategy6 = {
         strategy: strategyAddr6.address,
         minWeight: 0,
-        targetWeight: 70000,
+        targetWeight: 0,
         maxWeight: "100000",
         riskFactor: 0,
         enabled: true,
@@ -136,11 +136,11 @@ module.exports = async ({getNamedAccounts, deployments}) => {
         strategy5,
         strategy6
      ]
-     await (await pm.setStrategyWeights(weights)).wait();
-     console.log("portfolio.setWeights done");
+    //  await (await pm.setStrategyWeights(weights)).wait();
+    //  console.log("portfolio.setWeights done");
 
      // await pm.addStrategy(strategyAddr6.address);
-    //  await pm.removeStrategy(strategyAddr5.address);
+     await pm.removeStrategy(strategyAddr6.address);
 
     //  weights = [
 

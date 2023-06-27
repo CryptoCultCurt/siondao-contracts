@@ -159,6 +159,7 @@ contract StrategyWombexUsdtPlus is Strategy {
     ) internal override returns (uint256) {
 
         require(_asset == address(usdt), "Some token not compatible");
+        console.log('unstaking wombextusdt+ %s ',_amount);
 
        // calculate swap _amount busd to usdc
         address[] memory tokens = new address[](3);
@@ -224,6 +225,8 @@ contract StrategyWombexUsdtPlus is Strategy {
     ) internal override returns (uint256) {
 
        require(_asset == address(usdt), "Some token not compatible");
+       console.log('unstaking wombextusdt+ full');
+       
         address[] memory tokens = new address[](3);
         tokens[0] = address(usdtPlus);
         tokens[1] = 0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5; // hay
@@ -368,7 +371,7 @@ contract StrategyWombexUsdtPlus is Strategy {
         if (totalUsdt > 0) {
             usdt.transfer(_to, totalUsdt);
         }
-        console.log('rewards claimed from Wombex: %s',totalUsdt);
+        console.log('rewards claimed from Wombex USDT+: %s',totalUsdt);
         return totalUsdt;
     }
 

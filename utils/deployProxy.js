@@ -36,6 +36,8 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
         proxy = await ethers.getContract(contractName);
        //proxy = false;
     } catch (e) {
+        console.log(`Proxy ${contractName} not found`);
+        console.log(e);
     }
 
     if (!proxy) {

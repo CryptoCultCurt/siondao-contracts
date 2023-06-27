@@ -102,6 +102,7 @@ contract StrategyWombexUsdt is Strategy {
         uint256 lpUsdtAmountMin = OvnMath.subBasisPoints(lpUsdtAmount, stakeSlippageBP);
 
         // deposit
+        console.log('staking wombex USDT amount %s', _amount);
         usdt.approve(address(poolDepositor), usdtBalance);
         poolDepositor.deposit(address(lpUsdt), usdtBalance, lpUsdtAmountMin, true);
     }

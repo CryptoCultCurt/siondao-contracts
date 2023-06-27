@@ -13,7 +13,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     let wmx = '0xa75d9ca2a0a1D547409D82e1B06618EC284A2CeD';
     let lpUsdtPlus = '0xbd459E33307A4ae92fFFCb45C6893084CFC273B1'; // USDT token address
     let wmxLpUsdtPlus = '0xf73dc098aeb7b61155770b8efba4c5291cd08bd6'; // wmxLP-USDT token address
-    let poolDepositor = '0xF1fE1a695b4c3e2297a37523E3675603C0892b00'; // "Deposit contract address"
+    let poolDepositor = '0x0842c4431E4704a8740637cdc48Ab44D16C7Fe82'; // "Deposit contract address" // updated June 12,2023
     let pool = '0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0';
 
     let usdtPlus = '0x5335E87930b410b8C5BB4D43c3360ACa15ec0C8C';
