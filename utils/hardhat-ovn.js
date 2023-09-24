@@ -58,10 +58,10 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
 
         const destDir = `deployments/localhost`;
 
-        await fse.copySync(srcDir, destDir, {overwrite: true}, function (err) {
-            if (err)
-                console.error(err);
-        });
+        // await fse.copySync(srcDir, destDir, {overwrite: true}, function (err) {
+        //     if (err)
+        //         console.error(err);
+        // });
 
         await fs.writeFile('deployments/localhost/.chainId', '31337', function (err) {
             if (err) return console.log(err);

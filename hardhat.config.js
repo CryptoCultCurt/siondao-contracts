@@ -31,6 +31,17 @@ module.exports = {
           }
         }
     },
+    polygon: {
+      url: "https://rpc.ankr.com/polygon/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49",
+      chainId: 137,
+      gasPrice: 110000000000,
+      accounts: {mnemonic: process.env.MNEMONIC},
+      verify: {
+        etherscan: {
+          apiKey: process.env.ETHERSCAN_API_POLYGON
+        }
+      }
+  },
     testnet: {
         url: "https://data-seed-prebsc-1-s1.binance.org:8545",
         chainId: 97,
@@ -55,7 +66,7 @@ module.exports = {
       }
     },
   etherscan: {
-    apiKey:process.env.ETHERSCAN_API_BSC
+    apiKey:process.env.ETHERSCAN_API_POLYGON
   },
   namedAccounts : {
     deployer: {

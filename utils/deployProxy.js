@@ -10,6 +10,21 @@ async function deployProxy(contractName, deployments, save, params) {
     return deployProxyMulti(contractName, contractName, deployments, save, params);
 }
 
+async function deploy(contractName, deployments, save, params) {
+    try {
+        const MyName = await hre.ethers.getContractFactory(contractName);
+        const name = await MyName.deploy();
+        await name.deployed();
+        
+        console.log(contractName + " deployed to:", name.address);
+     
+        await save(contractName, name.address);
+    } catch (e) {
+        console.log(e);
+    }
+    
+};
+
 async function deployProxyMulti(contractName, factoryName, deployments, save, params) {
 
     if (hre.ovn === undefined)
@@ -37,7 +52,7 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
        //proxy = false;
     } catch (e) {
         console.log(`Proxy ${contractName} not found`);
-        console.log(e);
+       // console.log(e);
     }
 
     if (!proxy) {
@@ -144,4 +159,5 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
 module.exports = {
     deployProxy: deployProxy,
     deployProxyMulti: deployProxyMulti,
+    deploy: deploy
 };
