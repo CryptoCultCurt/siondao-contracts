@@ -1,16 +1,16 @@
 const {ethers} = require("hardhat");
 const constants = require('../utils/constants');
 const hre = require("hardhat");
-let {DEFAULT, BSC, OPTIMISM, COMMON, ARBITRUM} = require('../utils/assets');
+let {DEFAULT, POLYGON} = require('../utils/assets');
 
 module.exports = async () => {
 
     const exchange = await ethers.getContract("Exchange");
-    const token = await ethers.getContract("SionToken");
+    const token = await ethers.getContract("Sion");
     const m2m = await ethers.getContract("Mark2Market");
     const pm = await ethers.getContract("PortfolioManager");
 
-    let asset = BSC.usdt;
+    let asset = POLYGON.usdc;
 
     console.log("exchange.setToken: token " + token.address + " asset: " + asset);
     let tx = await exchange.setTokens(token.address, asset);

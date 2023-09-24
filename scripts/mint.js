@@ -20,11 +20,12 @@ async function main() {
 
     const exchange = await constants.getContract('Exchange');
     const signer = await ethers.getSigner(wallet);
-    const usdt = await util.getERC20("usdt",signer);
-    console.log(`Wallet USDT: ${await usdt.balanceOf(wallet)/1000000000000000000}`)
+    const usdc = await util.getERC20("usdc",signer);
+    console.log(usdc.address);
+    console.log(`Wallet USDC: ${await usdc.balanceOf(wallet)/1000000000}`)
 
-    let asset = usdt.address; 
-    let amount = "500000000000000000000"; // 5000
+    let asset = usdc.address; 
+    let amount = "5000000"; // 5000
     let referral = "";
     let params = [
         asset,
@@ -39,7 +40,7 @@ async function main() {
        [fromAddr]
     )
 
-    await usdt.connect(signer).approve(exchange.address,"50000000000000000000000000");
+    await usdc.connect(signer).approve(exchange.address,"50000000000000000000000000");
     await exchange.connect(signer).mint(params);
 
 

@@ -10,18 +10,19 @@ let lpStaking = '0x8731d54E9D02c286767d56ac03e8037C07e01e98';
 let pid = 0;
 let sushiSwapRouter = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506';
 
-module.exports = async ({deployments}) => {
-    const {save} = deployments;
 
-    await deploySection(async (name) => {
-        await deployProxy(name, deployments, save);
-    });
+module.exports = async ({getNamedAccounts, deployments}) => {
+    const {deploy} = deployments;
+    const {deployer} = await getNamedAccounts();
 
-    await settingSection(async (strategy) => {
+    const strategy = await ethers.getContract("StrategyStargateUsdc");
+    const pm = await ethers.getContract("PortfolioManager");
 
-        await (await strategy.setTokens(POLYGON.usdc, stgToken)).wait();
-        await (await strategy.setParams(stargateRouter, pool, lpStaking, pid, sushiSwapRouter)).wait();
-    });
+
+    await (await strategy.setTokens(POLYGON.usdc, stgToken)).wait();
+    await (await strategy.setParams(stargateRouter, pool, lpStaking, pid, sushiSwapRouter)).wait();
+    await strategy.setPortfolioManager(pm.address);
+    console.log("strategy.setParams done");
 };
 
-module.exports.tags = ['StrategyStargateUsdc'];
+module.exports.tags = ['sionsetting','StrategyStargateUsdcSetting'];

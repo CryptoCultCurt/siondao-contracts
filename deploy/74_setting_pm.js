@@ -1,6 +1,6 @@
 const {ethers} = require("hardhat");
 
-let {DEFAULT, BSC, OPTIMISM, ARBITRUM} = require('../utils/assets');
+let {DEFAULT, POLYGON} = require('../utils/assets');
 const hre = require("hardhat");
 
 module.exports = async () => {
@@ -31,6 +31,9 @@ module.exports = async () => {
 
     await (await pm.setAsset(asset)).wait();
     console.log(`pm.setAsset done ${asset}`);
+
+    await pm.grantRole(await pm.PORTFOLIO_MANAGER_ROLE(), timelock.address);
+    console.log("role granted");
 
 };
 
