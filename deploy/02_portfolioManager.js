@@ -5,4 +5,4 @@ module.exports = async ({deployments}) => {
     await deployProxy('PortfolioManager', deployments, save);
 };
 
-module.exports.tags = ['base','PortfolioManager'];
+module.exports.tags = ['sion','PortfolioManager'];

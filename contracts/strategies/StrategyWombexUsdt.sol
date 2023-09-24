@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../Strategy.sol";
+import "../sion/Strategy.sol";
 import "../connectors/Chainlink.sol";
 import {IWombatAsset, IWombatRouter} from "../connectors/Wombat.sol";
 import "../connectors/Wombex.sol";
@@ -102,7 +102,6 @@ contract StrategyWombexUsdt is Strategy {
         uint256 lpUsdtAmountMin = OvnMath.subBasisPoints(lpUsdtAmount, stakeSlippageBP);
 
         // deposit
-        console.log('staking wombex USDT amount %s', _amount);
         usdt.approve(address(poolDepositor), usdtBalance);
         poolDepositor.deposit(address(lpUsdt), usdtBalance, lpUsdtAmountMin, true);
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../Strategy.sol";
+import "../sion/Strategy.sol";
 import "../connectors/Chainlink.sol";
 import "../connectors/Thena.sol";
 import {IWombatRouter, WombatLibrary} from '../connectors/Wombat.sol';

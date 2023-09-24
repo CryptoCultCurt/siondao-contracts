@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../Strategy.sol";
+import "../sion/Strategy.sol";
 import "../connectors/Venus.sol";
 import "../connectors/PancakeV2.sol";
 import "hardhat/console.sol";

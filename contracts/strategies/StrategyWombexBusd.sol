@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../Strategy.sol";
+import "../sion/Strategy.sol";
 import "../connectors/Chainlink.sol";
 import "../connectors/Wombex.sol";
 import "../connectors/PancakeV2.sol";
@@ -330,7 +330,6 @@ contract StrategyWombexBusd is Strategy {
         if (totalBusd > 0) {
             usdt.transfer(_to, totalBusd);
         }
-        console.log('rewards claimed from Wombex: %s',totalBusd);
         return totalBusd;
     }
 

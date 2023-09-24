@@ -5,4 +5,4 @@ module.exports = async ({deployments}) => {
     await deployProxy('Mark2Market', deployments, save);
 };
 
-module.exports.tags = ['base','Mark2Market'];
+module.exports.tags = ['sion','Mark2Market'];
