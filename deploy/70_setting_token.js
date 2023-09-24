@@ -4,7 +4,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
 
-    const token = await ethers.getContract("SionToken");
+    const token = await ethers.getContract("Sion");
     const exchange = await ethers.getContract("Exchange");
 
     console.log('token.setExchanger: ' + exchange.address)
@@ -13,4 +13,4 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     console.log("token.setExchanger done");
 };
 
-module.exports.tags = ['setting','SettingToken'];
+module.exports.tags = ['sionsetting','SettingToken'];

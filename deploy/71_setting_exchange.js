@@ -34,4 +34,4 @@ module.exports = async () => {
 
 };
 
-module.exports.tags = ['setting', 'SettingExchange'];
+module.exports.tags = ['sionsetting', 'SettingExchange'];
