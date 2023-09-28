@@ -32,8 +32,7 @@ module.exports = async () => {
     await (await pm.setAsset(asset)).wait();
     console.log(`pm.setAsset done ${asset}`);
 
-    await pm.grantRole(await pm.PORTFOLIO_MANAGER_ROLE(), timelock.address);
-    console.log("role granted");
+
 
 };
 

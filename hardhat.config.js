@@ -21,8 +21,8 @@ module.exports = {
   defaultNetwork: 'hardhat',
   networks: {
     bsc: {
-        url: "https://rpc.ankr.com/bsc/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49",
-        chainId: 56,
+        url: "https://rpc.ankr.com/polygon/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49",
+        chainId: 137,
         gasPrice: 20000000000,
         accounts: {mnemonic: process.env.MNEMONIC},
         verify: {
@@ -58,7 +58,7 @@ module.exports = {
         chainId: 31337,
         accounts: {mnemonic: process.env.MNEMONIC},
         forking: {
-            url: 'https://rpc.ankr.com/bsc/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49'
+            url: 'https://rpc.ankr.com/polygon/e055afb958402bd2a97b039ae8452bb10b880d67994b18a3383ef4c34cf05b49'
         }
       },
       localhost: {

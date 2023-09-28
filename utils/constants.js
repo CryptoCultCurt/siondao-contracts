@@ -15,7 +15,10 @@ async function getContractAt(contract,address) {
 }
 
 function toDec18(number,decimals) {
-    return number/1000000000000000000
+    if (decimals) {
+        return number/10**decimals;
+    } else
+        return number/1000000000000000000
 }
 
 

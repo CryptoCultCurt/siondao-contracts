@@ -8,7 +8,7 @@
 
 const {ethers} = require("hardhat");
 const {getERC20,getERC20ByAddress} = require("../../utils/script-utils");
-const {BSC} = require('../../utils/assets');
+const {POLYGON} = require('../../utils/assets');
 const constants = require('../../utils/constants');
 const helpers = require("@nomicfoundation/hardhat-network-helpers");
 
@@ -39,6 +39,7 @@ async function main() {
    // const strategy = "0xE8d84555Bb2D1C715467290F5D2759c3768f0b2d";
     const signer = await ethers.getSigner(wallet);
     const caviar = await getERC20ByAddress(CVR,signer);
+    const usdr = await getERC20ByAddress(POLYGON.usdr,signer);
 
     async function setup() {
       console.log('setting strategy');
@@ -57,7 +58,7 @@ async function main() {
      // console.log(`Preview Deposit: ${previewDeposit}`);
       await caviar.connect(signer).approve(vault.address,ethers.utils.parseEther("999999999999999999999999.0"));
       console.log('contract approved');
-      const deposit = await vault.connect(signer).deposit(ethers.utils.parseEther(_amount.toString()),wallet);
+      const deposit = await vault.connect(signer).deposit(_amount.toString(),wallet);
     }
 
     async function rebalance() {
@@ -70,10 +71,10 @@ async function main() {
     }
 
     async function withdraw(_amount) {
-      const previewWithdraw = await vault.previewWithdraw(ethers.utils.parseEther(_amount.toString()));
+      const previewWithdraw = await vault.previewWithdraw(_amount.toString());
       console.log(`Preview Withdraw: ${previewWithdraw}`);
      // const assets = await vault.connect(signer).withdraw(10000000000000,wallet,wallet);
-  await vault.connect(signer).withdrawShares(ethers.utils.parseEther(_amount.toString()));
+  await vault.connect(signer).withdrawShares(_amount.toString());
      
      // console.log(`Withdraw: ${withdraw}`);
     }
@@ -85,16 +86,31 @@ async function main() {
   // await mine(410307); // one day
   // await mine(410307); // one day
   // await mine(410307); // one day
-  // await purchase(4000); // around $1000 usdc
+   //await purchase('7416507812458761770367'); // around $1000 usdc
   // await rebalance();
   //await mine(410307);
-  await doHardWork();  // first calls _invest to move funds to strategy, then calls _harvest to harvest rewards
+  //await doHardWork();  // first calls _invest to move funds to strategy, then calls _harvest to harvest rewards
 //  await rebalance();
- //  await withdraw(1000);
+  //await mine(4410307);
+
+ // await withdraw('993547044211312002653');
+// await vault.connect(signer).withdrawAll()
  //await vault.setUnderlyingAsset(CVR);
  //console.log('underlying asset set to: ',CVR);
-  //await doHardWork();
+//await vault.connect(signer).sweepToVault();
+//await doHardWork();
+
+// **** FIX AND WITHDRAWS ****
+  //  await vault.connect(signer).sweepToVault();
+  // const maxRedeem = await vault.maxRedeem(wallet);
+  // console.log('max redeem: %s ',maxRedeem.toString());
+  //  //await vault.connect(signer).withdrawAll();
+  // await withdraw(maxRedeem.toString());
     
+// await vault.connect(signer).invest();
+ //await doHardWork();
+
+
     const asset = await vault.asset();
     const decimals = await vault.decimals();
     const name = await vault.name();
@@ -104,21 +120,44 @@ async function main() {
     const underlyingAddress = await vault.underlying();
     const _underlyingUnit = await vault.underlyingUnit();
     const underlyingBalanceWithInvestment = await vault.underlyingBalanceWithInvestment();
-const pendingReward = 0//await strategy.pendingReward(); // pending rewards are wUSDR (not usdr), but harvest converts to usdr and gives rebase of caviar
-  
+    const pendingReward = 0//await strategy.pendingReward(); // pending rewards are wUSDR (not usdr), but harvest converts to usdr and gives rebase of caviar
     const rebaseChef = "0xf5374d452697d9A5fa2D97Ffd05155C853F6c1c6"; // caviar rebase chef
  
-    assetsOf = await vault.assetsOf(wallet);
-    console.log(`Assets of ${wallet}: ${assetsOf}`);
-    balanceOf = await vault.balanceOf(wallet);
-    console.log(`Balance of ${wallet}: ${balanceOf}`);
+    // assetsOf = await vault.assetsOf(wallet);
+    // console.log(`Assets of ${wallet}: ${assetsOf}`);
+    // balanceOf = await vault.balanceOf(wallet);
+    // console.log(`Balance of ${wallet}: ${balanceOf}`);
     const assetsPerShare = await vault.assetsPerShare();
     const availableToInvestOut = await vault.availableToInvestOut();
     const pricePerFullShare = await vault.getPricePerFullShare();
     const totalAssets = await vault.totalAssets();
     const totalSupply = await vault.totalSupply();
     const underlyingBalanceInVault = await vault.underlyingBalanceInVault();
-    const assetsOfWallet = await vault.assetsOf(wallet);
+    //const assetsOfWallet = await vault.assetsOf(wallet);
+
+    const sellAllInUSD = constants.toDec18(await strategy.EstimateInUsd(totalAssets),6);
+    const pricePer = sellAllInUSD/constants.toDec18(totalAssets);
+
+
+    const strategyBalance = await caviar.balanceOf(strategy.address);
+    const underlyingBalance = await caviar.balanceOf(vault.address);
+    const walletBalance = await caviar.balanceOf(wallet);
+    const investedBalance = underlyingBalanceWithInvestment- underlyingBalance;
+    const walletUSDR = await usdr.balanceOf(wallet);
+
+    // new stuff
+    const userRewardPerTokenPaid = await strategy.userRewardPerTokenPaid(wallet);
+    const rewardPerToken = await strategy.rewardPerToken();
+
+    const periodFinish = await strategy.periodFinish();
+    
+    const rewardRate = await strategy.rewardRate();
+    const lastUpdateTime = await strategy.lastUpdateTime();
+    const rewards = await strategy.rewards(wallet);
+    const totalSupplyStrat = await strategy.totalSupply();
+    const balanceOfStrat = await strategy.balanceOf(wallet);
+
+
 
     console.log(`Vault Settings:
 name:                                           ${name}
@@ -137,6 +176,25 @@ _underlying:                                    ${underlyingAddress}
 _vaultFractionToInvestNumerator:                ${vaultFractionToInvestNumerator}
 _vaultFractionToInvestDenominator:              ${vaultFractionToInvestDenominator}
 _strategy:                                      ${strategyAddress}
+
+caviar stuck in strategy                        ${constants.toDec18(strategyBalance)}
+caviar in vault                                 ${constants.toDec18(underlyingBalance)}
+caviar invested                                 ${constants.toDec18(investedBalance)}
+wallet caviar                                   ${constants.toDec18(walletBalance)}
+wallet cavier (dec18)                           ${walletBalance}
+wallet usdr                                     ${constants.toDec18(walletUSDR,9)}
+
+userRewardPerTokenPaid:                         ${constants.toDec18(userRewardPerTokenPaid)} 
+rewardPerToken:                                 ${constants.toDec18(rewardPerToken)}
+periodFinish:                                   ${periodFinish}
+rewardRate:                                     ${constants.toDec18(rewardRate)}
+lastUpdateTime:                                 ${lastUpdateTime}
+rewards:                                        ${constants.toDec18(rewards)}
+totalSupplyStrat:                               ${constants.toDec18(totalSupplyStrat)}
+balanceOfStrat:                                 ${constants.toDec18(balanceOfStrat)}
+
+porttfolio value:                               ${sellAllInUSD}
+caviar vaule:                                   ${pricePer}
 
     `);
 

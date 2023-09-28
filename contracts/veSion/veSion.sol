@@ -283,6 +283,11 @@ contract VaultERC4626 is
     function convertToAssets(
         uint256 _shares
     ) public view override returns (uint256) {
+        console.log('convertToAssets');
+        console.log('shares %s', _shares);
+        console.log('totalAssets %s', totalAssets());
+        console.log('totalSupply %s', totalSupply());
+        
         return
             totalAssets() == 0 || totalSupply() == 0
                 ? (_shares *
@@ -323,6 +328,10 @@ contract VaultERC4626 is
 
     function invest() external onlyAdmin {
         _invest();
+    }
+
+    function sweepToVault() public onlyAdmin whenStrategyDefined {
+        IStrategy(strategy).sweepToVault();
     }
 
     // =========================== SETTERS ===========================
@@ -391,6 +400,7 @@ contract VaultERC4626 is
                 fee
             );
         }
+        _invest();
     }
 
     /** @dev See {IERC4626-_deposit}. */

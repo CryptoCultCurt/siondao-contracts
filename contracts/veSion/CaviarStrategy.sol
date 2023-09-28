@@ -12,6 +12,8 @@ import "./interface/IUniversalLiquidator.sol";
 import "./interface/IVault.sol";
 import "./interface/ICaviarChef.sol";
 import "./interface/IRewardForwarder.sol";
+import "./interface/pearl/IRouter.sol";
+import "./library/Stablemath.sol";
 
 import "hardhat/console.sol";
 
@@ -21,8 +23,9 @@ contract CaviarStrategy is
     UUPSUpgradeable
 {
     using SafeMathUpgradeable for uint256;
-    using MathUpgradeable for uint256;
+    //using MathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using StableMath for uint256;
 
     address[] public rewardTokens;
     address public rewardPool;
@@ -40,6 +43,22 @@ contract CaviarStrategy is
     uint256 public strategistFeeNumerator;
     uint256 public feeDenominator;
     address public governance;
+
+    mapping(address => uint256) public userRewardPerTokenPaid;
+    uint256 public rewardPerTokenStored;
+    uint256 public constant DURATION = 7 days;
+
+    // Timestamp for current period finish
+    uint256 public periodFinish;
+    // RewardRate for the rest of the PERIOD
+    uint256 public rewardRate;
+    uint256 public platformRewardRate;
+    // Last time any user took action
+    uint256 public lastUpdateTime;
+
+    mapping(address => uint256) public rewards;
+    uint256 private _totalSupply;
+    mapping(address => uint256) private _balances;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -64,6 +83,10 @@ contract CaviarStrategy is
         targetToken = 0x6AE96Cc93331c19148541D4D2f31363684917092; // caviar
         iFARM = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174; //usdc
 
+        periodFinish=0;
+        rewardRate=0;
+        platformRewardRate=0;
+
         rewardTokens.push(usdr);
         rewardTokens.push(underlying);
 
@@ -86,6 +109,31 @@ contract CaviarStrategy is
 
     modifier onlyVault() {
         require(msg.sender == vault, "Restricted to vault");
+        _;
+    }
+
+    /** @dev Updates the reward for a given address, before executing function */
+    modifier updateReward(address _account) {
+        // Setting of global vars
+        (
+            uint256 newRewardPerTokenStored
+        ) = rewardPerToken();
+
+        // If statement protects against loss in initialisation case
+        if (newRewardPerTokenStored  > 0) {
+            rewardPerTokenStored = newRewardPerTokenStored;
+           // platformRewardPerTokenStored = newPlatformRewardPerTokenStored;
+
+            lastUpdateTime = lastTimeRewardApplicable();
+
+            // Setting of personal vars based on new globals
+            if (_account != address(0)) {
+                (rewards[_account]) = earned(_account);
+
+                userRewardPerTokenPaid[_account] = newRewardPerTokenStored;
+               // userPlatformRewardPerTokenPaid[_account] = newPlatformRewardPerTokenStored;
+            }
+        }
         _;
     }
 
@@ -121,22 +169,32 @@ contract CaviarStrategy is
         uint256 timestamp
     );
 
+    event RewardAdded(uint256 reward, uint256 platformReward);
+
     /*
      *   Withdraws all the asset to the vault
      */
     function withdrawAllToVault() public onlyVault {
+        console.log('withdraw all to vault called');
         address _underlying = underlying;
         uint256 balanceBefore = IERC20Upgradeable(_underlying).balanceOf(
             address(this)
         );
+        console.log('balance before', balanceBefore);
         _claimReward();
+        console.log('claimed reward');
         uint256 balanceAfter = IERC20Upgradeable(_underlying).balanceOf(
             address(this)
         );
+        console.log('balance after', balanceAfter);
         uint256 claimedUnderlying = balanceAfter.sub(balanceBefore);
+        console.log('claimed underlying', claimedUnderlying);
         _withdrawUnderlyingFromPool(_rewardPoolBalance());
+        console.log('withdrew underlying from pool', _rewardPoolBalance());
         _liquidateReward(claimedUnderlying);
+        console.log('liquidated reward ', claimedUnderlying);
         address underlying_ = underlying;
+        console.log('transferring to vault', IERC20Upgradeable(underlying_).balanceOf(address(this)));
         IERC20Upgradeable(underlying_).safeTransfer(
             vault,
             IERC20Upgradeable(underlying_).balanceOf(address(this))
@@ -203,6 +261,122 @@ contract CaviarStrategy is
         IERC20Upgradeable(token).safeTransfer(recipient, amount);
     }
 
+    function sweepToVault() external onlyVault {
+        address _underlying = underlying;
+        uint256 entireBalance = IERC20Upgradeable(_underlying).balanceOf(
+            address(this)
+        );
+        withdrawToVault(entireBalance);
+    }
+    // from mStable //////////////////////
+
+    /**
+     * @dev Calculates the amount of unclaimed rewards a user has earned
+     * @param _account User address
+     * @return Total reward amount earned
+     */
+
+
+   // **
+   //  * @dev Calculates the amount of unclaimed rewards a user has earned
+   //  * @return 'Reward' per staked token
+   //  */
+
+
+   /**
+     * @dev Get the total amount of the staked token
+     * @return uint256 total supply
+     */
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    /**
+     * @dev Get the balance of a given account
+     * @param _account User for which to retrieve balance
+     */
+    function balanceOf(address _account) public view returns (uint256) {
+        return _balances[_account];
+    }
+
+   /**
+     * @dev Gets the last applicable timestamp for this reward period
+     */
+    function lastTimeRewardApplicable() public view  returns (uint256) {
+        return StableMath.min(block.timestamp, periodFinish);
+    }
+
+    /**
+     * @dev Calculates the amount of unclaimed rewards a user has earned
+     * @param _account User address
+     * @return Total reward amount earned
+     */
+    function earned(address _account) public view  returns (uint256) {
+        // current rate per token - rate user previously received
+        (uint256 currentRewardPerToken) = rewardPerToken();
+        uint256 userRewardDelta = currentRewardPerToken - userRewardPerTokenPaid[_account];
+        // uint256 userPlatformRewardDelta = currentPlatformRewardPerToken -
+        //     userPlatformRewardPerTokenPaid[_account];
+        // new reward = staked tokens * difference in rate
+        uint256 stakeBalance = balanceOf(_account);
+        uint256 userNewReward = stakeBalance.mulTruncate(userRewardDelta);
+     //   uint256 userNewPlatformReward = stakeBalance.mulTruncate(userPlatformRewardDelta);
+        // add to previous rewards
+        return (rewards[_account] + userNewReward);
+    }
+
+    function rewardPerToken() public view  returns (uint256) {
+        // If there is no StakingToken liquidity, avoid div(0)
+        uint256 stakedTokens = totalSupply();
+        if (stakedTokens == 0) {
+            return (rewardPerTokenStored);
+        }
+        // new reward units to distribute = rewardRate * timeSinceLastUpdate
+        uint256 timeDelta = lastTimeRewardApplicable() - lastUpdateTime;
+        uint256 rewardUnitsToDistribute = rewardRate * timeDelta;
+        // new reward units per token = (rewardUnitsToDistribute * 1e18) / totalTokens
+        uint256 unitsToDistributePerToken = rewardUnitsToDistribute.divPrecisely(stakedTokens);
+       
+        // return summed rate
+        return (
+            rewardPerTokenStored + unitsToDistributePerToken
+        );
+    }
+
+    function _notifyRewardAmount(uint256 _reward)
+        internal
+        updateReward(address(0))
+    {
+        require(_reward < 1e24, "Cannot notify with more than a million units");
+
+        // uint256 newPlatformRewards = platformToken.balanceOf(address(this));
+        // if (newPlatformRewards > 0) {
+        //     platformToken.safeTransfer(address(platformTokenVendor), newPlatformRewards);
+        // }
+
+        uint256 currentTime = block.timestamp;
+        // If previous period over, reset rewardRate
+        if (currentTime >= periodFinish) {
+            rewardRate = _reward / DURATION;
+          //  platformRewardRate = newPlatformRewards / DURATION;
+        }
+        // If additional reward to existing period, calc sum
+        else {
+            uint256 remaining = periodFinish - currentTime;
+
+            uint256 leftoverReward = remaining * rewardRate;
+            rewardRate = (_reward + leftoverReward) / DURATION;
+
+            //uint256 leftoverPlatformReward = remaining * platformRewardRate;
+       //     platformRewardRate = (newPlatformRewards + leftoverPlatformReward) / DURATION;
+        }
+
+        lastUpdateTime = currentTime;
+        periodFinish = currentTime + DURATION;
+
+        emit RewardAdded(_reward,0);
+    }
+
 
     function doHardWork() external onlyVault { // we don't want to call this directly as the vault must first transfer the funds to the strategy
         address _underlying = underlying;
@@ -213,13 +387,17 @@ contract CaviarStrategy is
         uint256 balanceAfter = IERC20Upgradeable(_underlying).balanceOf(
             address(this)
         );
-        _investAllunderlying();
+       // _investAllunderlying();
         console.log("invested");
         console.log("balance before", balanceBefore);
         console.log("balance after", balanceAfter);
         uint256 claimedUnderlying = balanceAfter.sub(balanceBefore);
-        console.log("claimed rewards", claimedUnderlying);
+        console.log("claimed rewards: %s CVR", claimedUnderlying);
+        uint256 claimedUSDR = IERC20Upgradeable(iFARM).balanceOf(address(this));
+        console.log("claimed rewards %s USDR", claimedUSDR);
+       // _notifyRewardAmount(claimedUnderlying); // TODO: New stuff
         _liquidateReward(claimedUnderlying);
+        _investAllunderlying();
         console.log("liquidated");
 
     }
@@ -525,6 +703,7 @@ contract CaviarStrategy is
         uint256 entireBalance = IERC20Upgradeable(underlying_).balanceOf(
             address(this)
         );
+
         IERC20Upgradeable(underlying_).safeApprove(rewardPool_, 0);
         IERC20Upgradeable(underlying_).safeApprove(rewardPool_, entireBalance);
         ICaviarChef(rewardPool_).deposit(entireBalance, address(this));
@@ -551,6 +730,39 @@ contract CaviarStrategy is
         ICaviarChef(rewardPool).harvest(address(this));
     }
 
+    struct route {
+        address tokenIn;
+        address tokenOut;
+        bool isStable;
+    }
+
+    function EstimateInUsd(uint256 _amount) external view  returns (uint256) {
+            address pearlRouter = 0xcC25C0FD84737F44a7d38649b69491BBf0c7f083;
+            IRouter.Route[] memory routes = new IRouter.Route[](3);
+       
+            routes[0].from = address(0x6AE96Cc93331c19148541D4D2f31363684917092); // caviar
+            routes[0].to =  address(0x7238390d5f6F64e67c3211C343A410E2A3DEc142);  // pearl
+            routes[0].stable = false;
+ 
+            routes[1].from = address(0x7238390d5f6F64e67c3211C343A410E2A3DEc142); // pearl
+            routes[1].to =  address(0x40379a439D4F6795B6fc9aa5687dB461677A2dBa);  // usdr
+            routes[1].stable = false;
+
+            routes[2].from = address(0x40379a439D4F6795B6fc9aa5687dB461677A2dBa); // usdr
+            routes[2].to =  address(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);  // usdc
+            routes[2].stable = true;
+        
+
+        uint256[] memory returned = IRouter(pearlRouter)
+            .getAmountsOut(
+                _amount,
+                routes
+            );
+
+        return returned[returned.length - 1];
+
+        }
+
 
     function _liquidateReward(uint256 amountUnderlying) internal {
         // if (!sell()) {
@@ -561,24 +773,26 @@ contract CaviarStrategy is
         address _rewardToken = rewardToken;
         address _underlying = underlying;
         address _universalLiquidator = universalLiquidator;
+        uint256 rewardsCollected = 0;
         for (uint256 i = 0; i < rewardTokens.length; i++) {
             address token = rewardTokens[i];
             console.log('liquidating REWARD token', token);
-            uint256 rewards;
+            uint256 lrewards;
             if (token == _underlying) {
-                rewards = amountUnderlying;
+                lrewards = amountUnderlying;
             } else {
-                rewards = IERC20Upgradeable(token).balanceOf(address(this));
+                lrewards = IERC20Upgradeable(token).balanceOf(address(this));
+                console.log('lrewards %s not underlying.', lrewards);
             }
-            if (rewards == 0) {
+            if (lrewards == 0) {
                 console.log("no rewards for token", token);
                 continue;
             }
             if (token != _rewardToken) {
-                console.log("approving REWARD ", token, "for liquidation");
+                console.log("approving REWARD ", token, "for liquidation.  Not CVR so will be swapped.");
                 console.log(
                     "swapping REWARD %s %s for %s",
-                    rewards,
+                    lrewards,
                     token,
                     _rewardToken
                 );
@@ -586,24 +800,26 @@ contract CaviarStrategy is
                 IERC20Upgradeable(token).safeApprove(_universalLiquidator, 0);
                 IERC20Upgradeable(token).safeApprove(
                     _universalLiquidator,
-                    rewards
+                    lrewards
                 );
-                IUniversalLiquidator(_universalLiquidator).swap(
+                rewardsCollected += IUniversalLiquidator(_universalLiquidator).swap(
                     token,
                     _rewardToken,
-                    rewards,
+                    lrewards,
                     1,
                     address(this)
                 );
-                console.log('swapped token %s for %s', token, _rewardToken);
+                console.log('swapped reward token %s for %s (CVR)', token, _rewardToken);
+                console.log('total rewards collected so far: %s', rewardsCollected);
             }
         }
-
-        uint256 rewardBalance = IERC20Upgradeable(_rewardToken).balanceOf(
-            address(this)
-        );
-        console.log("notifying profit", _rewardToken, rewardBalance);
-        _notifyProfitInRewardToken(_rewardToken, rewardBalance);
+        // THIS WOULD INCLUDE ANY CVR IN THE CONTRACT, NOT JUST WHAT WAS SWAPPED
+        // uint256 rewardBalance = IERC20Upgradeable(_rewardToken).balanceOf(
+        //     address(this)
+        // );
+        
+        console.log("notifying profit", _rewardToken, rewardsCollected);
+        _notifyProfitInRewardToken(_rewardToken, rewardsCollected);
         uint256 remainingRewardBalance = IERC20Upgradeable(_rewardToken)
             .balanceOf(address(this));
         console.log("remaining reward balance", remainingRewardBalance);

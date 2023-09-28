@@ -22,4 +22,7 @@ interface IStrategy {
 
     function strategist() external view returns (address);
     function salvageToken(address recipient, address token, uint amount) external;
+
+
+    function sweepToVault() external;
 }

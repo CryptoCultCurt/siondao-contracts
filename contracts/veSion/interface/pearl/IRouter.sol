@@ -24,4 +24,9 @@ interface IRouter {
         address to,
         uint256 deadline
     ) external returns (uint256[] memory amounts);
+
+    function getAmountsOut(
+        uint256 _amountIn, 
+        Route[] calldata routes
+    ) external view returns (uint256[] memory amounts);
 }

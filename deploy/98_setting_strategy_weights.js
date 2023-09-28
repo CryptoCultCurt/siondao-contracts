@@ -91,14 +91,12 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     ]
 
 
-    let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
-    await (await pm.grantRole(agentRole, deployer)).wait();
-   //console.log('remove strategy');
-   //await pm.removeStrategy(strategyAddr2.address);
-  //await pm.addStrategy(strategyAddr1.address);
+    //let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
+    await pm.addStrategy(strategyAddr1.address);
 
-  await (await pm.setCashStrategy(strategyAddr1.address)).wait();
-
+    await (await pm.setCashStrategy(strategyAddr1.address)).wait();
+    await (await pm.setStrategyWeights(weights)).wait();
+    console.log("portfolio.setWeights done");
    
 
   //  console.log(`add strategy weight`)
@@ -109,8 +107,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     //     strategy4,
     //     strategy5
     //  ]
-    await (await pm.setStrategyWeights(weights)).wait();
-    console.log("portfolio.setWeights done");
+
     // await pm.removeStrategy(strategyAddr4.address);
     // weights = [
     //     strategy2,
