@@ -13,9 +13,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interface/IStrategy.sol";
 import "./interface/IVault.sol";
 import "./interface/IControllerV2.sol";
+import "./interface/IRewardsVault.sol";
 import "hardhat/console.sol";
 
-contract VaultERC4626 is
+contract SionVault is
     Initializable,
     AccessControlUpgradeable,
     UUPSUpgradeable,
@@ -33,6 +34,8 @@ contract VaultERC4626 is
     IStrategy public strategy;
     uint256 public constant TEN = 10; // This implicitly converts it to `uint256` from uint8
 
+    IRewardsVault public rewardsVault; // address of the vault distributing rewards
+    
     event Invest(uint256 amount);
     event StrategyAnnounced(address newStrategy, uint256 time);
     event StrategyChanged(address newStrategy, address oldStrategy);
@@ -348,6 +351,11 @@ contract VaultERC4626 is
         ERC20Upgradeable(newUnderlying).approve(address(strategy), uint256(2**(256) - 1));
     }
 
+    function setRewardsVault(address _rewardsVault) external onlyAdmin {
+        require(_rewardsVault != address(0), "Zero address not allowed");
+        rewardsVault = IRewardsVault(_rewardsVault);
+    }
+
     function setVaultFractionToInvest(
         uint256 numerator,
         uint256 denominator
@@ -371,57 +379,6 @@ contract VaultERC4626 is
                 availableAmount
             );
             emit Invest(availableAmount);
-        }
-    }
-
-    /** @dev See {IERC4626-_deposit}. */
-    function _deposit(
-        // depositing the underlying asset in exchange for shares.
-        address caller,
-        address receiver,
-        uint256 assets,
-        uint256 shares
-    ) internal virtual override {
-        uint256 fee = _feeOnTotal(assets, _entryFeeBasePoint());
-        address recipient = _entryFeeRecipient();
-        console.log("calling super deposit %s", assets);
-        console.log("fee %s", fee);
-        console.log("recipient %s", recipient);
-        console.log("shares %s", shares);
-        console.log("caller %s", caller);
-        console.log("receiver %s", receiver);
-        console.log("assets %s", assets);
-        super._deposit(caller, receiver, assets, shares);
-
-        if (fee > 0 && recipient != address(this)) {
-            SafeERC20Upgradeable.safeTransfer(
-                IERC20Upgradeable(asset()),
-                recipient,
-                fee
-            );
-        }
-        _invest();
-    }
-
-    /** @dev See {IERC4626-_deposit}. */
-    function _withdraw(
-        address caller,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares
-    ) internal virtual override {
-        uint256 fee = _feeOnRaw(assets, _exitFeeBasePoint());
-        address recipient = _exitFeeRecipient();
-
-        super._withdraw(caller, receiver, owner, assets, shares);
-
-        if (fee > 0 && recipient != address(this)) {
-            SafeERC20Upgradeable.safeTransfer(
-                IERC20Upgradeable(asset()),
-                recipient,
-                fee
-            );
         }
     }
 
@@ -461,7 +418,7 @@ contract VaultERC4626 is
             : amount.mul(totalSupply()).div(underlyingBalanceWithInvestment());
         _mint(beneficiary, toMint);
         console.log("successful mint");
-        console.log("transfering %s", amount);
+        console.log("transfering %s of token %s", amount, underlying());
         console.log("from %s", sender);
         console.log("to %s", address(this));
         IERC20Upgradeable(underlying()).safeTransferFrom(
@@ -470,6 +427,11 @@ contract VaultERC4626 is
             amount
         );
 
+        // mark the contribution in the rewards vault // do we use toMint or amount?
+        // rewardsVault.stakeWithBeneficiary(
+        //     msg.sender,
+        //     toMint
+        // );
         // update the contribution amount for the beneficiary
         emit Deposit(sender, beneficiary, amount, toMint);
     }
@@ -523,6 +485,12 @@ contract VaultERC4626 is
             receiver,
             underlyingAmountToWithdraw
         );
+
+        // mark the withdrawal in the rewards vault
+        // rewardsVault.withdrawWithBeneficiary(
+        //     msg.sender,
+        //     numberOfShares
+        // );
 
         // update the withdrawal amount for the holder
         emit Withdraw(

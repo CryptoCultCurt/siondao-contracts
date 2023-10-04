@@ -32,4 +32,6 @@ interface IVault {
 
     // hard work should be callable only by the controller (by the hard worker) or by governance
     function doHardWork() external;
+
+    function totalAssets() external view returns (uint256);
 }

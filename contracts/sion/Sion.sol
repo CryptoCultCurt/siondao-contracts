@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.5.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -7,14 +7,11 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20Metadat
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "../libraries/WadRayMath.sol"; 
+import "../libraries/WadRayMath.sol";
 
 contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20MetadataUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     using WadRayMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
-
-    uint256 public constant MAX_UINT_VALUE = type(uint256).max;
-
 
     // --- ERC20 fields
 
@@ -30,6 +27,7 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
     // ---  fields
 
     bytes32 public constant EXCHANGER = keccak256("EXCHANGER");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     uint256 private _totalMint;
     uint256 private _totalBurn;
@@ -53,12 +51,12 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
     // ---  modifiers
 
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Restricted to admins");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Restricted to admins");
         _;
     }
 
     modifier onlyExchanger() {
-        require(hasRole(EXCHANGER, _msgSender()), "Caller is not the EXCHANGER");
+        require(hasRole(EXCHANGER, msg.sender), "Caller is not the EXCHANGER");
         _;
     }
 
@@ -93,7 +91,8 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
         __AccessControl_init();
         __UUPSUpgradeable_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(UPGRADER_ROLE, msg.sender);
 
         // as Ray
         liquidityIndex = 10 ** 27;
@@ -105,7 +104,7 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
 
     function _authorizeUpgrade(address newImplementation)
     internal
-    onlyRole(DEFAULT_ADMIN_ROLE)
+    onlyRole(UPGRADER_ROLE)
     override
     {}
 
@@ -119,13 +118,6 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
         _decimals = decimals;
     }
 
-    function setName(string memory name) public onlyAdmin{
-        _name = name;
-    }
-
-    function setSymbol(string memory symbol) public onlyAdmin{
-        _symbol = symbol;
-    }
 
     // ---  logic
 
@@ -263,8 +255,8 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
      */
     function allowance(address owner, address spender) public view override returns (uint256) {
         uint256 allowanceRay = _allowance(owner, spender);
-        if (allowanceRay > (MAX_UINT_VALUE / liquidityIndex)) {
-            return MAX_UINT_VALUE;
+        if (allowanceRay > (type(uint256).max / liquidityIndex)) {
+            return type(uint256).max;
         }
         allowanceRay = allowanceRay.rayMul(liquidityIndex);
 
@@ -285,11 +277,8 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
      */
     function approve(address spender, uint256 amount) external override returns (bool){
         uint256 scaledAmount;
-
-        // We reduce the maximum allowable value and setup MAX_UINT_VALUE
-        // if call wadToRay and rayDiv for uint.max then node calculates this value for a very long time or crashes with a limit error
-        if (amount > (MAX_UINT_VALUE / liquidityIndex / 10 ** 9)) {
-            scaledAmount = MAX_UINT_VALUE;
+        if (amount > (type(uint256).max / liquidityIndex / 10 ** 9)) {
+            scaledAmount = type(uint256).max;
         } else {
             // up to ray
             scaledAmount = amount.wadToRay();
@@ -529,7 +518,7 @@ contract Sion is Initializable, ContextUpgradeable, IERC20Upgradeable, IERC20Met
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
     function decimals() public view override returns (uint8) {
-        return _decimals == 0 ? 18 : _decimals;
+        return _decimals == 0 ? 6 : _decimals;
     }
 
 

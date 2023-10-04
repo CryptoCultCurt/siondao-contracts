@@ -1,8 +1,8 @@
-const {deployProxy} = require("../utils/deployProxy");
+const {deployProxy} = require("../../utils/deployProxy");
 
 module.exports = async ({deployments}) => {
     const {save} = deployments;
-    await deployProxy('VaultERC4626', deployments, save);
+    await deployProxy('SionVault', deployments, save);
 };
 
 module.exports.tags = ['vesion','Vault'];

@@ -13,7 +13,7 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const token = await constants.getContract('SionToken');
+    const token = await constants.getContract('Sion');
 
     const decimals = await token.decimals();
     const exchange = await token.exchange();
@@ -23,9 +23,6 @@ async function main() {
     const ownerLength = await token.ownerLength();
     const totalMint = await token.totalMint();
     const totalSupply = await token.totalSupply();
-
-    await token.setName("Sion");
-    await token.setSymbol("SION");
     const name = await token.name();
     const symbol = await token.symbol();
 

@@ -2,6 +2,7 @@
 const util = require('../utils/script-utils');
 const constants = require('../utils/constants');
 const hre = require("hardhat");
+const {POLYGON} = require("../utils/assets.js");
 
 async function main() {
     let ethers = hre.ethers;
@@ -28,19 +29,15 @@ async function main() {
     let amount = "5000000"; // 5000
     let referral = "";
     let params = [
-        asset,
-        amount,
-        referral
+        POLYGON.usdc,
+        100000000000,
+        0x000
     ]
+// i got 99960 sion
 
-    let fromAddr = wallet;
-
-    await provider.send(
-        "hardhat_impersonateAccount",
-       [fromAddr]
-    )
 
     await usdc.connect(signer).approve(exchange.address,"50000000000000000000000000");
+    //await exchange.connect(signer).redeem(asset,amount);
     await exchange.connect(signer).mint(params);
 
 

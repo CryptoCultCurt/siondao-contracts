@@ -10,8 +10,9 @@ async function main() {
       );
       console.log('got provider');
    // const [owner,deployer] = await ethers.getSigners();
-    const fromAddr = constants.cvrWhale;
-    const toAddr = constants.wallet;//'0x10444014ba4831fa355bc57b2d30a383baa11285' //owner.address;//;
+    const fromAddr = constants.usdrWhale;
+    const toAddr =  constants.wallet;
+    const toAddr2 = '0x10444014ba4831fa355bc57b2d30a383baa11285'
     console.log('got addresses', fromAddr, toAddr);
     await provider.send(
         "hardhat_impersonateAccount",
@@ -25,26 +26,32 @@ async function main() {
     //const Exchange = await constants.getContract("Exchange");
     //console.log('exchange address: ' + Exchange.address);
     console.log('signer address: ' + signer.address);
-    let busd = await getERC20ByAddress("0x6AE96Cc93331c19148541D4D2f31363684917092",signer);
+    let usdr = await getERC20ByAddress("0x40379a439D4F6795B6fc9aa5687dB461677A2dBa",signer);
    // let usdc = await getERC20("usdc",await ethers.getSigner(toAddr));
     // await usdc.approve(
     //     Exchange.address,
     //     '10000000000000000000000000000'
     // )
-        console.log('approval done');
-    let busdBalance = (await busd.balanceOf(fromAddr)).toString();
+    console.log('approval done');
+    let usdrBalance = (await usdr.balanceOf(fromAddr)).toString();
     console.log(`Sending funds to ${toAddr}`);
     console.log(`${fromAddr} has ${ethers.utils.formatEther(await signer.getBalance())} ETH`);
-    console.log(`${fromAddr} has ${ethers.utils.formatEther(await busd.balanceOf(fromAddr))} CVR`);
-    let amount = ethers.utils.parseEther("5.0");
+    console.log(`${fromAddr} has ${constants.toDec18(await usdr.balanceOf(fromAddr),9)} USDR`);
+    //let amount = ethers.utils.parseEther("5.0");
     // const tx = {
     //     to: toAddr,
     //     value: ethers.utils.parseEther("500000")
     // }
     // await signer.sendTransaction(tx);
-    await busd.transfer(
+    amountToSend = '10000000000000';
+    await usdr.transfer(
         toAddr,
-        busdBalance
+        amountToSend
+    )
+
+    await usdr.transfer(
+        toAddr2,
+        amountToSend
     )
 
     

@@ -1,19 +1,64 @@
+
 const {ethers, upgrades} = require("hardhat");
 const hre = require("hardhat");
 const {getImplementationAddress} = require('@openzeppelin/upgrades-core');
 const sampleModule = require('@openzeppelin/hardhat-upgrades/dist/utils/deploy-impl');
 const fs = require('fs');
 const {getContract, checkTimeLockBalance} = require("./script-utils");
+const { formatUnits } = require("@ethersproject/units");
 
 
 async function deployProxy(contractName, deployments, save, params) {
     return deployProxyMulti(contractName, contractName, deployments, save, params);
 }
 
+
+
+
+
+// export const deployContract = async (
+//     contractFactory,
+//     contractName = "Contract",
+//     constructorArgs= [],
+//     overrides = {},
+// ) => {
+//     const contract = (await contractFactory.deploy(...constructorArgs, overrides))
+//     console.log(
+//         `Deploying ${contractName} contract with hash ${contract.deployTransaction.hash} from ${
+//             contract.deployTransaction.from
+//         } with gas price ${contract.deployTransaction?.gasPrice?.toNumber() || 1 / 1e9} Gwei`,
+//     )
+//     const receipt = await contract.deployTransaction.wait()
+//     const txCost = receipt.gasUsed.mul(contract.deployTransaction.gasPrice)
+//     const abiEncodedConstructorArgs = contract.interface.encodeDeploy(constructorArgs)
+//     console.log(
+//         `Deployed ${contractName} to ${contract.address} in block ${receipt.blockNumber}, using ${
+//             receipt.gasUsed
+//         } gas costing ${formatUnits(txCost)} ETH`,
+//     )
+//     console.log(`ABI encoded args: ${abiEncodedConstructorArgs.slice(2)}`)
+//     return contract
+// }
+
+
+
 async function deploy(contractName, deployments, save, params) {
     try {
+        console.log('non proxy deploy')
+        console.log(params);
+        const paramz = [
+            '0x4e1000616990D83e56f4b5fC6CC8602DcfD20459',
+            '0x6AE96Cc93331c19148541D4D2f31363684917092',
+            '0',
+            '3'
+          ]
         const MyName = await hre.ethers.getContractFactory(contractName);
-        const name = await MyName.deploy();
+        const name = await MyName.deploy(
+            contractName, {
+                from: hre.network.config.deployer,
+                args: [],
+                log: true,}
+        );
         await name.deployed();
         
         console.log(contractName + " deployed to:", name.address);
@@ -57,6 +102,7 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
 
     if (!proxy) {
         console.log(`Proxy ${contractName} not found`)
+        console.log(args);
         proxy = await upgrades.deployProxy(contractFactory, args, {
             kind: 'uups',
             unsafeAllow: unsafeAllow
@@ -159,5 +205,5 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
 module.exports = {
     deployProxy: deployProxy,
     deployProxyMulti: deployProxyMulti,
-    deploy: deploy
+    deploy: deploy,
 };

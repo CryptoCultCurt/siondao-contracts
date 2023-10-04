@@ -91,7 +91,8 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     ]
 
 
-    //let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
+    let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
+    await (await pm.grantRole(agentRole, "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341")).wait();
     await pm.addStrategy(strategyAddr1.address);
 
     await (await pm.setCashStrategy(strategyAddr1.address)).wait();

@@ -3,26 +3,22 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "../libraries/OvnMath.sol";
+
 import "../interfaces/IPortfolioManager.sol";
 import "../interfaces/IMark2Market.sol";
 import "../interfaces/IStrategy.sol";
 
 import "hardhat/console.sol";
 
-contract PortfolioManager is
-    IPortfolioManager,
-    Initializable,
-    AccessControlUpgradeable,
-    UUPSUpgradeable
-{
+contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     bytes32 public constant EXCHANGER = keccak256("EXCHANGER");
-    bytes32 public constant PORTFOLIO_AGENT_ROLE =
-        keccak256("PORTFOLIO_AGENT_ROLE");
+    bytes32 public constant PORTFOLIO_AGENT_ROLE = keccak256("PORTFOLIO_AGENT_ROLE");
     uint256 public constant TOTAL_WEIGHT = 100000; // 100000 ~ 100%
 
     // ---  fields
@@ -59,13 +55,11 @@ contract PortfolioManager is
         bool enabledReward
     );
 
+
     // ---  modifiers
 
     modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "Restricted to admins"
-        );
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Restricted to admins");
         _;
     }
 
@@ -75,18 +69,12 @@ contract PortfolioManager is
     }
 
     modifier cashStrategySet() {
-        require(
-            address(cashStrategy) != address(0),
-            "Cash strategy not set yet"
-        );
+        require(address(cashStrategy) != address(0), "Cash strategy not set yet");
         _;
     }
 
     modifier onlyPortfolioAgent() {
-        require(
-            hasRole(PORTFOLIO_AGENT_ROLE, msg.sender),
-            "Restricted to Portfolio Agent"
-        );
+        require(hasRole(PORTFOLIO_AGENT_ROLE, msg.sender), "Restricted to Portfolio Agent");
         _;
     }
 
@@ -95,7 +83,7 @@ contract PortfolioManager is
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize() public initializer {
+    function initialize() initializer public {
         __AccessControl_init();
         __UUPSUpgradeable_init();
 
@@ -104,9 +92,11 @@ contract PortfolioManager is
         navSlippageBp = 4; // 0.04%
     }
 
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+    function _authorizeUpgrade(address newImplementation)
+    internal
+    onlyRole(DEFAULT_ADMIN_ROLE)
+    override
+    {}
 
     // ---  setters
 
@@ -127,11 +117,10 @@ contract PortfolioManager is
         emit Mark2MarketUpdated(_m2m);
     }
 
-    function setNavSlippageBp(
-        uint256 _navSlippageBp
-    ) public onlyPortfolioAgent {
+    function setNavSlippageBp(uint256 _navSlippageBp) public onlyPortfolioAgent {
         navSlippageBp = _navSlippageBp;
     }
+
 
     function setAsset(address _asset) public onlyAdmin {
         require(_asset != address(0), "Zero address not allowed");
@@ -150,7 +139,12 @@ contract PortfolioManager is
         bool needMoveCash = address(cashStrategy) != address(0);
         if (needMoveCash) {
             // unstake everything
-            cashStrategy.unstake(address(asset), 0, address(this), true);
+            cashStrategy.unstake(
+                address(asset),
+                0,
+                address(this),
+                true
+            );
         }
 
         cashStrategy = IStrategy(_cashStrategy);
@@ -159,7 +153,10 @@ contract PortfolioManager is
             uint256 amount = asset.balanceOf(address(this));
             if (amount > 0) {
                 asset.transfer(address(cashStrategy), amount);
-                cashStrategy.stake(address(asset), amount);
+                cashStrategy.stake(
+                    address(asset),
+                    amount
+                );
                 emit CashStrategyRestaked(amount);
             }
         }
@@ -167,9 +164,13 @@ contract PortfolioManager is
         emit CashStrategyUpdated(_cashStrategy);
     }
 
+
+
     // ---  logic
 
+
     function deposit() external override onlyExchanger cashStrategySet {
+
         uint256 pmAssetBalance = asset.balanceOf(address(this));
         if (pmAssetBalance == 0) {
             // zero asset amount always fit in cash strategy but also zero stake result
@@ -179,19 +180,33 @@ contract PortfolioManager is
 
         // Stake all free asset amounts to cash Strategy
         asset.transfer(address(cashStrategy), pmAssetBalance);
-        cashStrategy.stake(address(asset), pmAssetBalance);
+        cashStrategy.stake(
+            address(asset),
+            pmAssetBalance
+        );
+
     }
 
-    function withdraw(
-        uint256 _amount
-    ) external override onlyExchanger cashStrategySet returns (uint256, bool) {
+
+    function withdraw(uint256 _amount)
+    external
+    override
+    onlyExchanger
+    cashStrategySet
+    returns (uint256, bool) {
+
         // if cash strategy has enough liquidity then prevent balancing
         uint256 liquidationValue = cashStrategy.liquidationValue();
 
         // Flag needed for exchanger for check: oncePerBlock
         bool isBalanced = false;
         if (liquidationValue > _amount) {
-            cashStrategy.unstake(address(asset), _amount, address(this), false);
+            cashStrategy.unstake(
+                address(asset),
+                _amount,
+                address(this),
+                false
+            );
         } else {
             // balance to needed amount
             _balance(asset, _amount);
@@ -202,16 +217,14 @@ contract PortfolioManager is
 
         // `if` is cheaper then `require` when need build complex message
         if (currentBalance < _amount) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "In portfolioManager not enough for transfer _amount: ",
-                        Strings.toString(currentBalance),
-                        " < ",
-                        Strings.toString(_amount)
-                    )
+            revert(string(
+                abi.encodePacked(
+                    "In portfolioManager not enough for transfer _amount: ",
+                    Strings.toString(currentBalance),
+                    " < ",
+                    Strings.toString(_amount)
                 )
-            );
+            ));
         }
 
         // transfer back tokens
@@ -248,15 +261,13 @@ contract PortfolioManager is
     }
 
     function _balance(IERC20 withdrawToken, uint256 withdrawAmount) internal {
+
         // after balancing, we need to make sure that we did not lose money when:
         // 1) transferring from one strategy to another
         // 2) when execute stake/unstake
 
-        // allowable losses 0.04% = USD+ mint/redeem fee
-        uint256 minNavExpected = OvnMath.subBasisPoints(
-            m2m.totalNetAssets(),
-            navSlippageBp
-        );
+        // allowable losses 0.04% = SION mint/redeem fee
+        uint256 minNavExpected = OvnMath.subBasisPoints(m2m.totalNetAssets(), navSlippageBp);
         minNavExpected = minNavExpected - withdrawAmount; // subscribe withdraw amount
 
         StrategyWeight[] memory strategies = getAllStrategyWeights();
@@ -265,8 +276,7 @@ contract PortfolioManager is
         uint256 totalAsset = asset.balanceOf(address(this));
         uint256 totalWeight = 0;
         for (uint8 i; i < strategies.length; i++) {
-            if (!strategies[i].enabled) {
-                // Skip if strategy is not enabled
+            if (!strategies[i].enabled) {// Skip if strategy is not enabled
                 continue;
             }
 
@@ -282,13 +292,11 @@ contract PortfolioManager is
                 totalAsset += IStrategy(strategies[i].strategy).netAssetValue();
                 totalWeight += strategies[i].targetWeight;
             }
+
         }
 
         if (address(withdrawToken) == address(asset)) {
-            require(
-                totalAsset >= withdrawAmount,
-                "Trying withdraw more than liquidity available"
-            );
+            require(totalAsset >= withdrawAmount, "Trying withdraw more than liquidity available");
             // it make to move to PortfolioManager extra asset to withdraw
             totalAsset = totalAsset - withdrawAmount;
         }
@@ -297,8 +305,8 @@ contract PortfolioManager is
         Order[] memory stakeOrders = new Order[](strategies.length);
         uint8 stakeOrdersCount = 0;
         for (uint8 i; i < strategies.length; i++) {
-            if (!strategies[i].enabled) {
-                // Skip if strategy is not enabled
+
+            if (!strategies[i].enabled) {// Skip if strategy is not enabled
                 continue;
             }
 
@@ -306,13 +314,10 @@ contract PortfolioManager is
             if (strategies[i].targetWeight == 0) {
                 targetLiquidity = 0;
             } else {
-                targetLiquidity =
-                    (totalAsset * strategies[i].targetWeight) /
-                    totalWeight;
+                targetLiquidity = (totalAsset * strategies[i].targetWeight) / totalWeight;
             }
 
-            uint256 currentLiquidity = IStrategy(strategies[i].strategy)
-                .netAssetValue();
+            uint256 currentLiquidity = IStrategy(strategies[i].strategy).netAssetValue();
             if (targetLiquidity == currentLiquidity) {
                 // skip already at target strategies
                 continue;
@@ -339,6 +344,7 @@ contract PortfolioManager is
 
         // 4.  make staking
         for (uint8 i; i < stakeOrdersCount; i++) {
+
             address strategy = stakeOrders[i].strategy;
             uint256 amount = stakeOrders[i].amount;
 
@@ -348,22 +354,19 @@ contract PortfolioManager is
             }
             asset.transfer(strategy, amount);
 
-            IStrategy(strategy).stake(address(asset), amount);
+            IStrategy(strategy).stake(
+                address(asset),
+                amount
+            );
         }
 
-        require(
-            m2m.totalNetAssets() >= minNavExpected,
-            "PM: NAV less than expected"
-        );
+        require(m2m.totalNetAssets() >= minNavExpected, "PM: NAV less than expected");
+
     }
 
-    function setStrategyWeights(
-        StrategyWeight[] calldata _strategyWeights
-    ) external onlyPortfolioAgent {
-        require(
-            _strategyWeights.length == strategyWeights.length,
-            "Wrong number of strategies"
-        );
+    function setStrategyWeights(StrategyWeight[] calldata _strategyWeights) external onlyPortfolioAgent {
+
+        require(_strategyWeights.length == strategyWeights.length, 'Wrong number of strategies');
 
         uint256 totalTarget = 0;
 
@@ -375,22 +378,14 @@ contract PortfolioManager is
             StrategyWeight memory weightNew = _strategyWeights[i];
 
             uint256 index = strategyWeightPositions[weightNew.strategy];
-            require(updatedStrategies[index] != true, "Strategy was updated");
+            require(updatedStrategies[index] != true, 'Strategy was updated');
+
 
             StrategyWeight memory weightOld = strategyWeights[index];
 
-            require(
-                weightOld.strategy == weightNew.strategy,
-                "Incorrect strategy index"
-            );
-            require(
-                weightNew.minWeight <= weightNew.targetWeight,
-                "minWeight shouldn't higher than targetWeight"
-            );
-            require(
-                weightNew.targetWeight <= weightNew.maxWeight,
-                "targetWeight shouldn't higher than maxWeight"
-            );
+            require(weightOld.strategy == weightNew.strategy, 'Incorrect strategy index');
+            require(weightNew.minWeight <= weightNew.targetWeight, "minWeight shouldn't higher than targetWeight");
+            require(weightNew.targetWeight <= weightNew.maxWeight, "targetWeight shouldn't higher than maxWeight");
 
             totalTarget += weightNew.targetWeight;
 
@@ -398,9 +393,7 @@ contract PortfolioManager is
 
             updatedStrategies[index] = true;
 
-            _totalRiskFactor +=
-                ((weightNew.riskFactor / 100) * weightNew.targetWeight) /
-                1000;
+            _totalRiskFactor += (weightNew.riskFactor / 100 * weightNew.targetWeight) / 1000;
 
             emit StrategyWeightUpdated(
                 index,
@@ -414,36 +407,25 @@ contract PortfolioManager is
             );
         }
 
-        require(
-            totalTarget == TOTAL_WEIGHT,
-            "Total target should equal to TOTAL_WEIGHT"
-        );
+        require(totalTarget == TOTAL_WEIGHT, "Total target should equal to TOTAL_WEIGHT");
 
         totalRiskFactor = _totalRiskFactor;
         emit TotalRiskFactorUpdated(_totalRiskFactor);
+
     }
 
     function addStrategy(address _strategy) external onlyAdmin {
+
         for (uint8 i = 0; i < strategyWeights.length; i++) {
-            require(
-                strategyWeights[i].strategy != _strategy,
-                "Strategy already exist"
-            );
+            require(strategyWeights[i].strategy != _strategy, 'Strategy already exist');
         }
 
+
         // Strategy is disabled always when only created
-        StrategyWeight memory strategyWeight = StrategyWeight(
-            _strategy,
-            0,
-            0,
-            0,
-            0,
-            false,
-            false
-        );
+        StrategyWeight memory strategyWeight = StrategyWeight(_strategy, 0, 0, 0, 0, false, false);
 
         uint256 index; // default index = 0
-        if (strategyWeights.length != 0) {
+        if(strategyWeights.length != 0){
             index = strategyWeights.length; // next index = length (+1)
         }
 
@@ -453,19 +435,19 @@ contract PortfolioManager is
     }
 
     function removeStrategy(address _strategy) external onlyAdmin {
+
         uint256 index = strategyWeightPositions[_strategy];
         StrategyWeight memory weight = strategyWeights[index];
 
-        require(weight.strategy == _strategy, "Address strategy not equals");
-        require(weight.targetWeight == 0, "Target weight must be 0");
-        require(
-            IStrategy(weight.strategy).netAssetValue() == 0,
-            "Strategy nav must be 0"
-        );
+        require(weight.strategy == _strategy, 'Address strategy not equals');
+        require(weight.targetWeight == 0, 'Target weight must be 0');
+        require(IStrategy(weight.strategy).netAssetValue() == 0, 'Strategy nav must be 0');
+
 
         // Remove gap from array
-        for (uint i = index; i < strategyWeights.length - 1; i++) {
-            StrategyWeight memory _tempWeight = strategyWeights[i + 1];
+        for (uint i = index; i < strategyWeights.length-1; i++){
+
+            StrategyWeight memory _tempWeight = strategyWeights[i+1];
 
             strategyWeights[i] = _tempWeight;
             strategyWeightPositions[_tempWeight.strategy] = i;
@@ -473,12 +455,11 @@ contract PortfolioManager is
 
         strategyWeights.pop();
         delete strategyWeightPositions[_strategy];
+
     }
 
-    function _addStrategyWeightAt(
-        StrategyWeight memory strategyWeight,
-        uint256 index
-    ) internal {
+
+    function _addStrategyWeightAt(StrategyWeight memory strategyWeight, uint256 index) internal {
         uint256 currentLength = strategyWeights.length;
         // expand if need
         if (currentLength == 0 || currentLength - 1 < index) {
@@ -500,30 +481,72 @@ contract PortfolioManager is
         );
     }
 
-    function getStrategyWeight(
-        address strategy
-    ) public view override returns (StrategyWeight memory) {
+
+    function getStrategyWeight(address strategy) public override view returns (StrategyWeight memory) {
+
         if (strategyWeights.length == 0) {
-            revert("Strategy not found");
+            revert('Strategy not found');
         }
 
-        StrategyWeight memory weight = strategyWeights[
-            strategyWeightPositions[strategy]
-        ];
-        require(weight.strategy == strategy, "Strategy not found");
+        StrategyWeight memory weight = strategyWeights[strategyWeightPositions[strategy]];
+        require(weight.strategy == strategy, 'Strategy not found');
         return weight;
     }
 
-    function getAllStrategyWeights()
-        public
-        view
-        override
-        returns (StrategyWeight[] memory)
-    {
+    function getAllStrategyWeights() public override view returns (StrategyWeight[] memory) {
         return strategyWeights;
     }
 
-    function getTotalRiskFactor() external view override returns (uint256) {
+    function getTotalRiskFactor() external override view returns (uint256) {
         return totalRiskFactor;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

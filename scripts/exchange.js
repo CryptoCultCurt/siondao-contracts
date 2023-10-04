@@ -24,7 +24,7 @@ async function main() {
     const payoutListener = await exchange.payoutListener();
     const portfolioManager = await exchange.portfolioManager();
     const profitRecipient = await exchange.profitRecipient();
-    const usdPlus = await exchange.usdPlus(); 
+    const sion = await exchange.sion(); 
     const usdc = await exchange.usdc(); 
     console.log(`Exchange Settings:
     mark2market:        ${mark2market}
@@ -35,7 +35,7 @@ async function main() {
     payoutListener:     ${payoutListener}
     portfolioManager:   ${portfolioManager}
     profitRecipient:    ${profitRecipient}
-    usdPlus:            ${usdPlus}
+    sion:               ${sion}
     usdc:               ${usdc}
     abroadmin:          ${await exchange.abroadMin()}
     abroadmax:          ${await exchange.abroadMax()}

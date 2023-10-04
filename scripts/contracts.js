@@ -1,6 +1,8 @@
+
 const util = require('../utils/script-utils');
 const constants = require('../utils/constants');
 const hre = require("hardhat");
+const {POLYGON} = require("../utils/assets.js");
 
 async function main() {
     let ethers = hre.ethers;
@@ -8,7 +10,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         "http://localhost:8545"
       );
-    const wallet = constants.wallet;
+    let wallet = constants.wallet;
     const [owner,deployer,third] = await ethers.getSigners();
     const { chainId } = await ethers.provider.getNetwork();
     console.log(`\nOwner:       ${owner.address}`);
@@ -16,14 +18,28 @@ async function main() {
     console.log(`Block:       ${await ethers.provider.getBlockNumber()}`);
     console.log(`Chain:       ${chainId}`);
 
-    const signer = await ethers.getSigner(owner.address);
 
-
+    const exchange = await constants.getContract('Exchange');
+    const pm = await constants.getContract('PortfolioManager');
+    const m2m = await constants.getContract('Mark2Market');
     const token = await constants.getContract('Sion');
-    const EXCHANGER = await token.EXCHANGER();
-    await token.grantRole(EXCHANGER,signer.address);
-    await token.mint(signer.address,"5000000000000000000000");
-    await token.burn(signer.address,"3000000000000000000000");
+
+    const vault = await constants.getContract('VaultERC4626');
+    const strategy = await constants.getContract('CaviarStrategy');
+    const rewardsVault = await constants.getContract('CaviarStrategy');
+
+
+    console.log(`Contracts:
+    Exchange:       ${exchange.address}
+    Portfolio:      ${pm.address}
+    M2M:            ${m2m.address}
+    Token:          ${token.address}
+
+    Vault:          ${vault.address}
+    Strategy:       ${strategy.address}
+    RewardsVault:   ${rewardsVault.address}
+    
+    `)
 
 
 }

@@ -11,8 +11,8 @@ async function main() {
     const { chainId } = await ethers.provider.getNetwork();
     console.log(chainId);
 
-    const token = await constants.getContract('TestToken');
-    const busd = await getERC20('busd',wallet);
+    const token = await constants.getContract('Sion');
+    const busd = await getERC20('usdc',wallet);
     let ownerBalance = 0;
 
     ownerBalance = await token.balanceOf(wallet)

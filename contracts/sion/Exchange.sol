@@ -29,7 +29,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     // ---  fields
 
-    Sion public sion;
+    Sion    public sion;
     IERC20 public usdc; // asset name
 
     IPortfolioManager public portfolioManager; //portfolio manager contract
@@ -98,7 +98,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
     event PaidRedeemFee(uint256 amount, uint256 feeAmount);
     event NextPayoutTime(uint256 nextPayoutTime);
     event OnNotEnoughLimitRedeemed(address token, uint256 amount);
-    event PayoutAbroad(uint256 delta, uint256 deltasion);
+    event PayoutAbroad(uint256 delta, uint256 deltaSion);
     event Abroad(uint256 min, uint256 max);
     event ProfitRecipientUpdated(address recipient);
     event OracleLossUpdate(uint256 oracleLoss, uint256 denominator);
@@ -286,7 +286,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         string referral; // code from Referral Program -> if not have -> set empty
     }
 
-    // Minting USD+ in exchange for an asset
+    // Minting Sion in exchange for an asset
 
     function mint(MintParams calldata params) external whenNotPaused returns (uint256) {
         return _buy(params.asset, params.amount, params.referral);
@@ -302,7 +302,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
      * @param _asset Asset to spend
      * @param _amount Amount of asset to spend
      * @param _referral Referral code
-     * @return Amount of minted USD+ to caller
+     * @return Amount of minted Sion to caller
      */
     function _buy(address _asset, uint256 _amount, string memory _referral) internal returns (uint256) {
         require(_asset == address(usdc), "Only asset available for buy");
@@ -313,7 +313,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         require(_amount > 0, "Amount of asset is zero");
 
         uint256 sionAmount = _assetToRebase(_amount);
-        require(sionAmount > 0, "Amount of USD+ is zero");
+        require(sionAmount > 0, "Amount of Sion is zero");
 
         uint256 _targetBalance = usdc.balanceOf(address(portfolioManager)) + _amount;
         usdc.transferFrom(msg.sender, address(portfolioManager), _amount);
@@ -335,12 +335,12 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
     /**
      * @param _asset Asset to redeem
-     * @param _amount Amount of USD+ to burn
+     * @param _amount Amount of Sion to burn
      * @return Amount of asset unstacked and transferred to caller
      */
     function redeem(address _asset, uint256 _amount) external whenNotPaused returns (uint256) {
         require(_asset == address(usdc), "Only asset available for redeem");
-        require(_amount > 0, "Amount of USD+ is zero");
+        require(_amount > 0, "Amount of Sion is zero");
         require(sion.balanceOf(msg.sender) >= _amount, "Not enough tokens to redeem");
 
         uint256 assetAmount = _rebaseToAsset(_amount);
@@ -471,16 +471,37 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         }
     }
 
-    function payout() external whenNotPaused onlyUnit {
+    /**
+     * @dev Payout
+     * The root method of protocol Sion
+     * Calculates delta total NAV - total supply Sion and accrues profit or loss among all token holders
+     *
+     * What do method?
+     * - Claim rewards from all strategy
+     * - Increase liquidity index Sion on amount of profit
+     * - Decrease liquidity index Sion on amount of loss
+     *
+     * Support Insurance mode: Only if insurance is set
+     * What the Insurance to do?
+     * If Sion has Loss then Exchange coverts the loss through Insurance
+     * if Sion has profit then Exchange send premium amount to Insurance
+     *
+     * Explain params:
+     * @param simulate - allow to get amount loss/premium for prepare swapData (call.static)
+     * @param swapData - Odos swap data for swapping OVN->asset or asset->OVN in Insurance
+     */
+
+
+    function payout(bool simulate, IInsuranceExchange.SwapData memory swapData) external whenNotPaused onlyUnit returns (int256 swapAmount) {
         if (block.timestamp + payoutTimeRange < nextPayoutTime) {
-            return;
+            return 0;
         }
 
         // 0. call claiming reward and balancing on PM
-        // 1. get current amount of USD+
+        // 1. get current amount of Sion
         // 2. get total sum of asset we can get from any source
-        // 3. calc difference between total count of USD+ and asset
-        // 4. update USD+ liquidity index
+        // 3. calc difference between total count of Sion and asset
+        // 4. update Sion liquidity index
 
         portfolioManager.claimAndBalance();
 
@@ -498,7 +519,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         if (totalSion > totalNav) {
 
             // Negative rebase
-            // USD+ have loss and we need to execute next steps:
+            // Sion have loss and we need to execute next steps:
             // 1. Loss may be related to oracles: we wait
             // 2. Loss is real then compensate all loss + [1] bps
 
@@ -510,24 +531,33 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
             }else {
                 loss += totalSion * compensateLoss / compensateLossDenominator;
                 loss = _rebaseToAsset(loss);
-                IInsuranceExchange(insurance).compensate(loss, address(portfolioManager));
-                portfolioManager.deposit();
+                if (simulate) {
+                    return -int256(loss);
+                }
+                if (swapData.amountIn != 0) {
+                    IInsuranceExchange(insurance).compensate(swapData, loss, address(portfolioManager));
+                    portfolioManager.deposit();
+                }
             }
 
         } else {
 
             // Positive rebase
-            // USD+ have profit and we need to execute next steps:
+            // Sion have profit and we need to execute next steps:
             // 1. Pay premium to Insurance
             // 2. If profit more max delta then transfer excess profit to OVN wallet
 
             premium = _rebaseToAsset((totalNav - totalSion) * portfolioManager.getTotalRiskFactor() / FISK_FACTOR_DM);
 
-            if(premium > 0){
+            if (simulate) {
+                return int256(premium);
+                }
+
+            if(premium > 0 && swapData.amountIn != 0) {
                 portfolioManager.withdraw(premium);
                 usdc.transfer(insurance, premium);
-                IInsuranceExchange(insurance).premium(premium);
 
+                IInsuranceExchange(insurance).premium(swapData);
                 totalNav = totalNav - _assetToRebase(premium);
             }
 
@@ -536,14 +566,14 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
 
             if (abroadMax < delta) {
 
-                // Calculate the amount of USD+ to hit the maximum delta.
+                // Calculate the amount of Sion to hit the maximum delta.
                 // We send the difference to the OVN wallet.
 
                 // How it works?
                 // 1. Calculating target liquidity index
                 // 2. Calculating target sion.totalSupply
-                // 3. Calculating delta USD+ between target USD+ totalSupply and current USD+ totalSupply
-                // 4. Convert delta USD+ from scaled to normal amount
+                // 3. Calculating delta Sion between target Sion totalSupply and current Sion totalSupply
+                // 4. Convert delta Sion from scaled to normal amount
 
                 uint256 currentLiquidityIndex = sion.liquidityIndex();
                 uint256 targetLiquidityIndex = abroadMax * currentLiquidityIndex / LIQ_DELTA_DM;
@@ -551,7 +581,7 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
                 uint256 deltaSionSupplyRay = targetSionSupplyRay - sion.scaledTotalSupply();
                 excessProfit = deltaSionSupplyRay.rayMulDown(currentLiquidityIndex).rayToWad();
 
-                // Mint USD+ to OVN wallet
+                // Mint Sion to OVN wallet
                 require(profitRecipient != address(0), 'profitRecipient address is zero');
                 sion.mint(profitRecipient, excessProfit);
 
@@ -612,5 +642,6 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
             nextPayoutTime = nextPayoutTime + payoutPeriod;
         }
         emit NextPayoutTime(nextPayoutTime);
+        return 0;
     }
 }

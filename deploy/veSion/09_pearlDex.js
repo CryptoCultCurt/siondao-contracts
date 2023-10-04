@@ -1,4 +1,4 @@
-const {deployProxy,deploy} = require("../utils/deployProxy");
+const {deployProxy,deploy} = require("../../utils/deployProxy");
 
 module.exports = async ({deployments}) => {
     const {save} = deployments;
