@@ -57,7 +57,7 @@ async function main() {
         toAddr3.address,
         amount
     )
-    console.log('transfer done to wallet %s', toAddr3);
+    console.log('transfer done to wallet %s', toAddr3.address);
 
     
 

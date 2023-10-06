@@ -6,17 +6,23 @@ let { POLYGON } = require('../../utils/assets');
 module.exports = async () => {
 
   const vault = await ethers.getContract("SionVault");
-  const strategy = await ethers.getContract("CaviarStrategy");
+  const strategy = await ethers.getContract("CaviarVaultStrategy");
   const ul = await ethers.getContract("UniversalLiquidator");
   const ulr = await ethers.getContract("UniversalLiquidatorRegistry");
+  const sionToken = await ethers.getContract("Sion");
+  const vaultManager = await ethers.getContract("SionVaultManager");
+  const m2m = await ethers.getContract("Mark2MarketVaults");
   const dex = "0xBC00945395d2aE7Eddced6AaB9A6733997efa0ab"; //CURRENTLY NON-PROXY await ethers.getContract("PearlDex");
   const wallet = "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341";
+  
 
   let usdc = POLYGON.usdc;
   let cvr = POLYGON.cvr;
   let weth = POLYGON.weth;
   let usdr = POLYGON.usdr;
   let pearl = POLYGON.pearl;
+  let sion = sionToken.address;
+
 
   // setup vault
   console.log('setting strategy');
@@ -26,8 +32,10 @@ module.exports = async () => {
   await vault.setVaultFractionToInvest(90,100); // leaves 10% in vault
   console.log('vault fraction to invest set.');
   console.log('setting underlying asset');
-  await vault.setUnderlyingAsset(cvr);
-  console.log('underlying asset set to: ', cvr);
+  await vault.setUnderlyingAsset(sion);
+  console.log('underlying asset set to: ', sion);
+  await vault.setVaultManager(vaultManager.address);
+  console.log('vault manager set');
 
   // setup strategy
   console.log('setting vault address');
@@ -37,8 +45,8 @@ module.exports = async () => {
    await strategy.setIFarm(usdr);
   console.log('iFarm address set to: ', ul.address);
   console.log('setting reward token');
-   await strategy.setRewardToken(cvr);
-  console.log('reward token set to: ', cvr);
+   await strategy.setRewardToken(usdc);
+  console.log('reward token set to: ', usdc);
   console.log('setting strategist');
    await strategy.setStrategist(wallet);
   console.log('strategist set to: ', wallet);
@@ -63,6 +71,7 @@ module.exports = async () => {
   console.log('setting strategist fee numerator');
    await strategy.setStrategistFeeNumerator(1);
   console.log('strategist fee numerator set to: 1');
+  await vault.setMark2Market(m2m.address);
 
   // setup universal liquidator
   console.log('setting path registry');
@@ -70,17 +79,19 @@ module.exports = async () => {
   console.log('path registry set to: ', ulr.address);
 
   // setup universal liquidator registry
-  console.log('setup dex');
-  const name = ethers.utils.formatBytes32String('Pearl');
-   await ulr.addDex(name, dex);
-  console.log('dex added')
+  // console.log('setup dex');
+  // const name = ethers.utils.formatBytes32String('Pearl');
+  //  await ulr.addDex(name, dex);
+  // console.log('dex added')
   // get the dex
   const dexes = await ulr.getAllDexes(); // this doesn't exist
   console.log('setting path');
-  await ulr.setPath(dexes[0], [usdr, pearl, weth]);
-  await ulr.setPath(dexes[0], [weth, pearl, usdr]);
-  await ulr.setPath(dexes[0], [cvr, pearl, usdr]);
-  await ulr.setPath(dexes[0], [usdr, pearl, cvr]);
+  // await ulr.setPath(dexes[0], [usdr, pearl, weth]);
+  // await ulr.setPath(dexes[0], [weth, pearl, usdr]);
+  // await ulr.setPath(dexes[0], [cvr, pearl, usdr]);
+  // await ulr.setPath(dexes[0], [usdr, pearl, cvr]);
+  // await ulr.setPath(dexes[0], [usdc, usdr, pearl, cvr]); // new
+  // await ulr.setPath(dexes[0], [usdr, usdc]); // new
   console.log('paths set');
 };
 

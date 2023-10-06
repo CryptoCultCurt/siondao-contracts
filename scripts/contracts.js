@@ -24,22 +24,35 @@ async function main() {
     const m2m = await constants.getContract('Mark2Market');
     const token = await constants.getContract('Sion');
 
-    const vault = await constants.getContract('VaultERC4626');
-    const strategy = await constants.getContract('CaviarStrategy');
-    const rewardsVault = await constants.getContract('CaviarStrategy');
+    const sionVault = await constants.getContract('SionVault');
+    const sionVaultManager = await constants.getContract('SionVaultManager');
+    const sionVaultStrategy = await constants.getContract('SionVaultStrategy');
+
+    const caviarVaultStrategy = await constants.getContract('CaviarVaultStrategy');
+    const caviarVault = await constants.getContract('CaviarVault');
+    const caviarVaultManager = await constants.getContract('CaviarVaultManager');
+
+    const rewardsVault = await constants.getContract('RewardsVault');
 
 
     console.log(`Contracts:
-    Exchange:       ${exchange.address}
-    Portfolio:      ${pm.address}
-    M2M:            ${m2m.address}
-    Token:          ${token.address}
+    Exchange:             ${exchange.address}
+    Portfolio:            ${pm.address}
+    M2M:                  ${m2m.address}
+    Token:                ${token.address}
 
-    Vault:          ${vault.address}
-    Strategy:       ${strategy.address}
-    RewardsVault:   ${rewardsVault.address}
+    SionVault:            ${sionVault.address}
+    SionVaultManager:     ${sionVaultManager.address}
+    SionVaultStrategy:    ${sionVaultStrategy.address}
+
+    CaviarVault:          ${caviarVault.address}
+    CaviarVaultManager:   ${caviarVaultManager.address}
+    CaviarVaultStrategy:  ${caviarVaultStrategy.address}
     
-    `)
+    RewardsVault:         ${rewardsVault.address}
+
+    `);
+
 
 
 }

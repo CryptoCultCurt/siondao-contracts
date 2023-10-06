@@ -10,13 +10,13 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interface/IStrategy.sol";
-import "./interface/IVault.sol";
-import "./interface/IControllerV2.sol";
-import "./interface/IRewardsVault.sol";
+import "../../interface/IStrategy.sol";
+import "../../interface/IVault.sol";
+import "../../interface/IControllerV2.sol";
+import "../../interface/IRewardsVault.sol";
 import "hardhat/console.sol";
 
-contract SionVault is
+contract CaviarVault is
     Initializable,
     AccessControlUpgradeable,
     UUPSUpgradeable,
@@ -47,7 +47,7 @@ contract SionVault is
         __AccessControl_init();
         __UUPSUpgradeable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        __ERC20_init("veTest", "veTest");
+        __ERC20_init("veTestCaviar", "veTestCaviar");
     }
 
     function _authorizeUpgrade(

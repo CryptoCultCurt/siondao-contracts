@@ -2,7 +2,9 @@ const {deployProxy} = require("../../utils/deployProxy");
 
 module.exports = async ({deployments}) => {
     const {save} = deployments;
-    await deployProxy('CaviarStrategy', deployments, save);
+    const sion = await ethers.getContract("Sion");
+    const params = {args:["vexSion","vexSion",sion.address]};
+    await deployProxy('SionVaultStrategy', deployments, save, params);
 };
 
-module.exports.tags = ['vesion','VaultStrategy'];
+module.exports.tags = ['vesion','SionVaultStrategy'];

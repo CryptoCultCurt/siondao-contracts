@@ -84,6 +84,8 @@ async function deployProxyMulti(contractName, factoryName, deployments, save, pa
         args = params.args;
     }
 
+    console.log(args);
+
     const contractFactory = await ethers.getContractFactory(factoryName, factoryOptions);
 
     //await upgrades.forceImport('0x5AfF5fF3b0190EC73a956b3aAFE57C3b85d35b37', contractFactory, args, {
