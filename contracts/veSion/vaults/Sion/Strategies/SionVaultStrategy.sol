@@ -5,11 +5,14 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { AbstractVaultStrategy } from "../../../inheritance/AbstractVaultStrategy.sol";
 import { IERC20Upgradeable }  from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
+import "../../../../interfaces/IExchange.sol";
+import "../../../interface/IUniversalLiquidator.sol";
+import "../../../interface/IVault.sol";
 import "hardhat/console.sol";
 
 contract SionVaultStrategy is AbstractVaultStrategy {
-    address public vaultManager;
     IERC20Upgradeable private _asset;
+    IERC20Upgradeable public cvr;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -125,48 +128,70 @@ contract SionVaultStrategy is AbstractVaultStrategy {
         returns (uint256 totalManagedAssets)
     {}
 
-    function underlyingBalanceInVault()
-        external
-        view
-        override
-        returns (uint256)
-    {}
+    // function underlyingBalanceInVault()
+    //     external
+    //     view
+    //     override
+    //     returns (uint256)
+    // {}
 
-    function underlyingBalanceWithInvestment()
-        external
-        view
-        override
-        returns (uint256)
-    {}
+    // function underlyingBalanceWithInvestment()
+    //     external
+    //     view
+    //     override
+    //     returns (uint256)
+    // {}
 
-    function underlying() external view override returns (address) {}
+    // function underlying() external view override returns (address) {}
 
-    function strategy() external view override returns (address) {}
+    // function strategy() external view override returns (address) {}
 
-    function setStrategy(address _strategy) external override {}
+    // function setStrategy(address _strategy) external override {}
 
-    function announceStrategyUpdate(address _strategy) external override {}
+    // function announceStrategyUpdate(address _strategy) external override {}
 
-    function setVaultFractionToInvest(
-        uint256 numerator,
-        uint256 denominator
-    ) external override {}
+    // function setVaultFractionToInvest(
+    //     uint256 numerator,
+    //     uint256 denominator
+    // ) external override {}
 
-    function deposit(uint256 amountWei) external override {
-        console.log('cash strategy deposit called.  currently does nothing');
+    function setCVRToken(address _cvr) external {
+        cvr = IERC20Upgradeable(_cvr);
     }
 
-    function depositFor(uint256 amountWei, address holder) external override {}
+    function deposit(uint256 amountWei, address receiver) external override returns (uint256) {
+        console.log('cash strategy deposit called.  currently does nothing');
+        // convert sion depositted into usdc through redeem ****** ISSUE: we do NOT want to actually redeem sion here, just convert to usdc
+        _asset.approve(address(exchange), amountWei);
+        exchange.redeem(address(usdc), amountWei);
+        //  we then convert the USDC to CVR which is the underlying token of this vault
+        uint256 usdcBalance = usdc.balanceOf(address(this));
+        // approve the trasnfer of USDC to the universalLiquidator
+        usdc.approve(address(universalLiquidator), usdcBalance);
+        universalLiquidator.swap(
+                    address(usdc),
+                    address(cvr),
+                    1000000,
+                    0,
+                    address(this)
+                );
+        // then call the deposit function on the CaviarVault
+        caviarVault.deposit(amountWei, address(this));
+        return amountWei;
 
-    function withdrawAll() external override {}
+    }
 
-    function getPricePerFullShare() external view override returns (uint256) {}
+    // function depositFor(uint256 amountWei, address holder) external override {}
 
-    function underlyingBalanceWithInvestmentForHolder(
-        address holder
-    ) external view override returns (uint256) {}
+    // function withdrawAll() external override {}
 
-    function doHardWork() external override {}
+    // function getPricePerFullShare() external view override returns (uint256) {}
 
-    function liquidationValue() external view override returns (uint256) {}
+    // function underlyingBalanceWithInvestmentForHolder(
+    //     address holder
+    // ) external view override returns (uint256) {}
+
+    // function doHardWork() external override {}
+
+    // function liquidationValue() external view override returns (uint256) {}
 }

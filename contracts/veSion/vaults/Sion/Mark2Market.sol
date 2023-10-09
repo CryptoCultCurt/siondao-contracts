@@ -7,9 +7,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "../interfaces/IMark2Market.sol";
-import "../interfaces/IStrategy.sol";
-import "./interface/IVaultManager.sol";
+import "../../../interfaces/IMark2Market.sol";
+import "../../../interfaces/IStrategy.sol";
+import "../../interface/IVaultManager.sol";
 
 import "hardhat/console.sol";
 

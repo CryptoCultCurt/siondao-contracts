@@ -17,7 +17,10 @@ import "../interface/ILiquidatorVault.sol";
 
 import "hardhat/console.sol";
 
-abstract contract AbstractVaultManager is IVaultManager, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
+abstract contract AbstractVaultManager is 
+    IVaultManager, 
+    AccessControlUpgradeable, 
+    UUPSUpgradeable {
     bytes32 public constant EXCHANGER = keccak256("EXCHANGER");
     bytes32 public constant PORTFOLIO_AGENT_ROLE = keccak256("PORTFOLIO_AGENT_ROLE");
     uint256 public constant TOTAL_WEIGHT = 100000; // 100000 ~ 100%
@@ -159,7 +162,8 @@ abstract contract AbstractVaultManager is IVaultManager, Initializable, AccessCo
             if (amount > 0) {
                 asset.transfer(address(cashStrategy), amount);
                 cashStrategy.deposit(
-                    amount
+                    amount,
+                    address(this)
                 );
                 emit CashStrategyRestaked(amount);
             }
@@ -190,7 +194,8 @@ abstract contract AbstractVaultManager is IVaultManager, Initializable, AccessCo
         asset.transfer(address(cashStrategy), vmAssetBalance);
         console.log('calling cashStrategy.deposit to address (%s) ', address(cashStrategy) );
         cashStrategy.deposit(
-            vmAssetBalance
+            vmAssetBalance,
+            address(this)
         );
 
     }

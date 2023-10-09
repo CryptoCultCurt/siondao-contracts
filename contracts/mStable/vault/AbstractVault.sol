@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
 import { IERC4626Vault } from "../interfaces/IERC4626Vault.sol";
 import { VaultManagerRole } from "../shared/VaultManagerRole.sol";
@@ -10,25 +11,11 @@ import { InitializableToken } from "../tokens/InitializableToken.sol";
 
 /**
  * @title   Abstract ERC-4626 Vault.
- * @author  mStable
- * @notice  See the following for the full EIP-4626 specification https://eips.ethereum.org/EIPS/eip-4626.
- * Connects to the mStable Nexus to get modules and roles like the `Governor` and `Liquidator`.
- * Creates the `VaultManager` role.
  *
  * The `totalAssets`, `_beforeWithdrawHook` and `_afterDepositHook` functions need to be implemented.
  *
- * @dev     VERSION: 1.0
- *          DATE:    2022-02-10
- *
- * The constructor of implementing contracts need to call the following:
- * - VaultManagerRole(_nexus)
- * - AbstractVault(_assetArg)
- *
- * The `initialize` function of implementing contracts need to call the following:
- * - InitializableToken._initialize(_name, _symbol, decimals)
- * - VaultManagerRole._initialize(_vaultManager)
- * - AbstractVault._initialize(_assetToBurn)
  */
+
 abstract contract AbstractVault is IERC4626Vault, InitializableToken, VaultManagerRole {
     using SafeERC20 for IERC20;
 

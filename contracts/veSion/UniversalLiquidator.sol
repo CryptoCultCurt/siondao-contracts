@@ -18,6 +18,8 @@ import "./interface/ILiquidityDex.sol";
 import "./library/DataTypes.sol";
 import "./library/Errors.sol";
 
+import "hardhat/console.sol";
+
 contract UniversalLiquidator is     
     Initializable,
     AccessControlUpgradeable,
@@ -58,9 +60,11 @@ contract UniversalLiquidator is
         returns (uint256 receiveAmt)
     {
         DataTypes.SwapInfo[] memory swapInfo = IUniversalLiquidatorRegistry(pathRegistry).getPath(_sellToken, _buyToken);
-
+        console.log('in UL transfering tokens from sender %s to UL %s: ', msg.sender, swapInfo[0].dex);
+        console.log('sellAmount: ', _sellAmount);   
+        console.log('sellToken: ', _sellToken);
         IERC20Upgradeable(_sellToken).safeTransferFrom(msg.sender, swapInfo[0].dex, _sellAmount);
-
+        console.log('in swap in UniversalLiquidator');
         uint256 minBuyAmount;
         address receiver;
         for (uint256 idx; idx < swapInfo.length;) {
@@ -90,6 +94,11 @@ contract UniversalLiquidator is
         internal
         returns (uint256 receiveAmt)
     {
+        console.log('calling doSwap in _dex: ', _dex);
+        console.log('sellAmount: ', _sellAmount);
+        console.log('minBuyAmount: ', _minBuyAmount);
+        console.log('receiver: ', _receiver);
+
         receiveAmt = ILiquidityDex(_dex).doSwap(_sellAmount, _minBuyAmount, _receiver, _path);
 
         emit Swap(_path[0], _path[_path.length - 1], _receiver, msg.sender, _sellAmount, _minBuyAmount);

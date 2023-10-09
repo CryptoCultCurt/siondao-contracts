@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0 <0.9.0;
 
-interface IUsdPlusToken {
+interface ISion {
 
     function liquidityIndex() external view returns (uint256);
     function exchange() external view returns (address);

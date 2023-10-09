@@ -10,8 +10,11 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 // Libs
-import { ILiquidatorVault } from "../interface/ILiquidatorVault.sol";
+import { IStrategyVault } from "../interface/IStrategyVault.sol";
 import { IERC4626Vault } from "../interface/IERC4626Vault.sol";
+import { IExchange } from "../../interfaces/IExchange.sol";
+import { IUniversalLiquidator } from "../interface/IUniversalLiquidator.sol";
+import { IVault } from "../interface/IVault.sol";
 
 /**
  * @title   Vaults must implement this if they integrate to the Liquidator.
@@ -24,7 +27,13 @@ import { IERC4626Vault } from "../interface/IERC4626Vault.sol";
  */
 
                                             
-abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, PausableUpgradeable, AccessControlUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
+abstract contract AbstractVaultStrategy is 
+    IERC4626Vault, 
+    IStrategyVault, 
+    PausableUpgradeable, 
+    AccessControlUpgradeable, 
+    ERC20Upgradeable, 
+    UUPSUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     bytes32 public constant EXCHANGER = keccak256("EXCHANGER");
@@ -34,8 +43,12 @@ abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, Paus
     // ---  fields
       /// @notice Reward tokens collected by the vault.
     address[] public rewardToken;
-    address public universalLiquidator;
     IERC20Upgradeable private _asset;
+
+    IExchange public exchange;
+    IERC20Upgradeable public usdc;
+    IUniversalLiquidator public universalLiquidator;
+    IVault public caviarVault;
    
 
     // ---  events
@@ -136,7 +149,7 @@ abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, Paus
     }
 
     function _addRewards(address[] memory _rewardTokens) internal virtual {
-        address liquidator = universalLiquidator;
+        address liquidator = address(universalLiquidator);
         require(liquidator != address(0), "invalid Liquidator V2");
 
         uint256 rewardTokenLen = rewardToken.length;
@@ -175,7 +188,19 @@ abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, Paus
     }
 
     function setUniversalLiquidator(address _address) public onlyAdmin {
-        universalLiquidator = _address;
+        universalLiquidator = IUniversalLiquidator(_address);
+    }
+
+    function setExchange(address _address) public onlyAdmin {
+        exchange = IExchange(_address);
+    }
+
+    function setVault(address _address) public onlyAdmin {
+        caviarVault = IVault(_address);
+    }   
+
+    function setUSDC(address _address) public onlyAdmin {
+        usdc = IERC20Upgradeable(_address);
     }
 
     // standard ERC4626 Vault functions
@@ -280,7 +305,7 @@ abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, Paus
         uint256 assets,
         address receiver,
         address owner
-    ) external virtual override(IERC4626Vault, ILiquidatorVault) whenNotPaused returns (uint256 shares) {
+    ) external virtual override whenNotPaused returns (uint256 shares) {
         shares = _withdraw(assets, receiver, owner);
     }
 
@@ -390,7 +415,7 @@ abstract contract AbstractVaultStrategy is IERC4626Vault, ILiquidatorVault, Paus
      *
      * Returns the total amount of the underlying asset that is “managed” by vault.
      */
-    function totalAssets() public view virtual override(IERC4626Vault, ILiquidatorVault) returns (uint256 totalManagedAssets);
+    function totalAssets() public view virtual override returns (uint256 totalManagedAssets);
 
     function netAssets() external view virtual returns (uint256 netAssetsAmount) {
         netAssetsAmount = totalAssets();

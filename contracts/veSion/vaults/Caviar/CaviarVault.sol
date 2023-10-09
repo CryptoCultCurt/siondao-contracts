@@ -14,6 +14,8 @@ import "../../interface/IStrategy.sol";
 import "../../interface/IVault.sol";
 import "../../interface/IControllerV2.sol";
 import "../../interface/IRewardsVault.sol";
+import "../../interface/IVaultManager.sol";
+import "../../interface/IMark2Market.sol";
 import "hardhat/console.sol";
 
 contract CaviarVault is
@@ -35,6 +37,8 @@ contract CaviarVault is
     uint256 public constant TEN = 10; // This implicitly converts it to `uint256` from uint8
 
     IRewardsVault public rewardsVault; // address of the vault distributing rewards
+    IVaultManager public vaultManager; // address of the vault manager
+    IMark2Market public m2m; // address of the mark to market contract
     
     event Invest(uint256 amount);
     event StrategyAnnounced(address newStrategy, uint256 time);
@@ -47,7 +51,7 @@ contract CaviarVault is
         __AccessControl_init();
         __UUPSUpgradeable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        __ERC20_init("veTestCaviar", "veTestCaviar");
+        __ERC20_init("veTest", "veTest");
     }
 
     function _authorizeUpgrade(
@@ -91,7 +95,7 @@ contract CaviarVault is
     }
 
     function totalAssets() public view override returns (uint256) {
-        return underlyingBalanceWithInvestment();
+        return m2m.totalNetAssets();
     }
 
     function assetsPerShare() public view returns (uint256) {
@@ -148,24 +152,30 @@ contract CaviarVault is
      * Returns the cash balance across all users in this contract.
      */
     function underlyingBalanceInVault() public view returns (uint256) {
-        return IERC20Upgradeable(underlying()).balanceOf(address(this));
+        console.log('requesting underlying balance in vault: ', totalAssets());
+       // return IERC20Upgradeable(underlying()).balanceOf(address(vaultManager)); // money is held in the vault manager and the vault manager strategies
+       return totalAssets();
     }
 
     /* Returns the current underlying (e.g., DAI's) balance together with
      * the invested amount (if DAI is invested elsewhere by the strategy).
      */
     function underlyingBalanceWithInvestment() public view returns (uint256) {
-        if (address(strategy) == address(0)) {
+      //  if (address(strategy) == address(0)) {
             // initial state, when not set
             return underlyingBalanceInVault();
-        }
-        return
-            underlyingBalanceInVault().add(
-                IStrategy(strategy).investedUnderlyingBalance()
-            );
+        // }
+        // return
+        //     underlyingBalanceInVault().add(
+        //         IStrategy(strategy).investedUnderlyingBalance()
+        //     );
     }
 
     function getPricePerFullShare() public view returns (uint256) {
+        console.log('get price per full share');
+        console.log('underlying unit: ',underlyingUnit());
+        console.log('underlying balance w/ investment: ', underlyingBalanceWithInvestment());
+        console.log('total supply: ', totalSupply());
         return
             totalSupply() == 0
                 ? underlyingUnit()
@@ -236,9 +246,10 @@ contract CaviarVault is
         uint256 _assets,
         address _receiver
     ) public override returns (uint256) {
-        uint shares = convertToShares(_assets);
-        _deposit(_assets, msg.sender, _receiver);
-        return shares;
+        //uint shares = convertToShares(_assets);
+       // _deposit(_assets, msg.sender, _receiver);
+       return 100000;
+       // return shares;
     }
 
     function mint(
@@ -356,6 +367,16 @@ contract CaviarVault is
         rewardsVault = IRewardsVault(_rewardsVault);
     }
 
+    function setVaultManager(address _vaultManager) external onlyAdmin {
+        require(_vaultManager != address(0), "Zero address not allowed");
+        vaultManager = IVaultManager(_vaultManager);
+    }
+
+    function setMark2Market(address _mark2market) external onlyAdmin {
+        require(_mark2market != address(0), "Zero address not allowed");
+        m2m = IMark2Market(_mark2market);
+    }
+
     function setVaultFractionToInvest(
         uint256 numerator,
         uint256 denominator
@@ -420,13 +441,16 @@ contract CaviarVault is
         console.log("successful mint");
         console.log("transfering %s of token %s", amount, underlying());
         console.log("from %s", sender);
-        console.log("to %s", address(this));
+        console.log("to %s", address(vaultManager));
         IERC20Upgradeable(underlying()).safeTransferFrom(
             sender,
-            address(this),
+            address(vaultManager),
             amount
         );
-
+        console.log("successful transfer");
+        console.log("depositing to vault manager (%s)", address(vaultManager));
+        vaultManager.deposit(); // tell the vault manager to deal with the deposit
+        console.log("successful deposit to vaultManager");
         // mark the contribution in the rewards vault // do we use toMint or amount?
         // rewardsVault.stakeWithBeneficiary(
         //     msg.sender,

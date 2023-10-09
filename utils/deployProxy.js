@@ -44,15 +44,12 @@ async function deployProxy(contractName, deployments, save, params) {
 
 async function deploy(contractName, deployments, save, params) {
     try {
-        console.log('non proxy deploy')
-        console.log(params);
-        const paramz = [
-            '0x4e1000616990D83e56f4b5fC6CC8602DcfD20459',
-            '0x6AE96Cc93331c19148541D4D2f31363684917092',
-            '0',
-            '3'
-          ]
-        const MyName = await hre.ethers.getContractFactory(contractName);
+        console.log('non proxy deploy from ' + hre.network.config.deployer + ' to ' + hre.network.config.network + ' network')
+        console.log('params : ',params);
+        console.log(deployments);
+       
+        const MyName = await ethers.getContractFactory(contractName);
+       // console.log('MyName : ',MyName);
         const name = await MyName.deploy(
             contractName, {
                 from: hre.network.config.deployer,

@@ -57,6 +57,10 @@ contract UniversalLiquidatorRegistry is
     }
 
     function getPath(address _sellToken, address _buyToken) public view  returns (DataTypes.SwapInfo[] memory) {
+        console.log("getPath in UniversalLiquidatorRegistry");
+        console.log("sellToken: ", _sellToken);
+        console.log("buyToken: ", _buyToken);
+        
         if (paths[_sellToken][_buyToken].dex != bytes32(0)) {
             DataTypes.SwapInfo[] memory retPaths = new DataTypes.SwapInfo[](1);
             retPaths[0] = DataTypes.SwapInfo(dexesInfo[paths[_sellToken][_buyToken].dex], paths[_sellToken][_buyToken].paths);

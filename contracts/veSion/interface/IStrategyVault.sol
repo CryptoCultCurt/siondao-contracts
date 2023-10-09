@@ -7,7 +7,7 @@ pragma solidity 0.8.17;
  * @dev     VERSION: 1.0
  *          DATE:    2022-05-11
  */
-interface ILiquidatorVault {
+interface IStrategyVault {
     /**
      * @notice Used by the liquidator to collect rewards from the vault's underlying platforms
      * or vaults into the vault contract.
@@ -53,33 +53,4 @@ interface ILiquidatorVault {
      * @return token The address of the tokens being donated.
      */
     function donateToken(address rewardToken) external view returns (address token);
-
-    // standard ERC4626 vault functions
-        function underlyingBalanceInVault() external view returns (uint256);
-    function underlyingBalanceWithInvestment() external view returns (uint256);
-
-    function underlying() external view returns (address);
-    function strategy() external view returns (address);
-
-    function setStrategy(address _strategy) external;
-    function announceStrategyUpdate(address _strategy) external;
-    function setVaultFractionToInvest(uint256 numerator, uint256 denominator) external;
-
-    function deposit(uint256 amountWei, address holder) external returns (uint256 shares);
-    function depositFor(uint256 amountWei, address holder) external;
-
-    function withdrawAll() external;
-    function withdraw(uint256 numberOfShares, address, address) external returns (uint256);
-    function getPricePerFullShare() external view returns (uint256);
-
-    function underlyingBalanceWithInvestmentForHolder(address holder) view external returns (uint256);
-
-    // hard work should be callable only by the controller (by the hard worker) or by governance
-    function doHardWork() external;
-
-    function totalAssets() external view returns (uint256);
-
-    // mStable specific
-    function liquidationValue() external view returns (uint256);
-
 }

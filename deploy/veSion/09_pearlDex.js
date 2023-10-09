@@ -1,12 +1,12 @@
-const {deployProxy,deploy} = require("../../utils/deployProxy");
+// const {deployProxy,deploy} = require("../../utils/deployProxy");
 
-module.exports = async ({deployments}) => {
-    const {save} = deployments;
+// module.exports = async ({deployments}) => {
+//     const {save} = deployments;
     
-    await deploy('PearlDex', deployments, save);
-};
+//     await deploy('PearlDex', deployments, save);
+// };
 
-module.exports.tags = ['vesion','PearlDex'];
+// module.exports.tags = ['vesion','PearlDex'];
 // const hre = require("hardhat");
 
 // module.exports = async ({getNamedAccounts, deployments}) => {
@@ -21,3 +21,14 @@ module.exports.tags = ['vesion','PearlDex'];
 //         log: true,
 //     });
 // };
+
+
+const {deployProxy} = require("../../utils/deployProxy");
+
+module.exports = async ({deployments}) => {
+    const {save} = deployments;
+    await deployProxy('PearlDex', deployments, save);
+    console.log('PearlDex deployed');
+};
+
+module.exports.tags = ['vesion','PearlDex'];
