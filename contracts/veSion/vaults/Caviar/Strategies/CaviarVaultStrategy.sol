@@ -160,24 +160,9 @@ contract CaviarVaultStrategy is AbstractVaultStrategy {
     }
 
     function deposit(uint256 amountWei, address receiver) external override returns (uint256) {
-        console.log('cash strategy deposit called.  currently does nothing');
+        console.log('cash strategy deposit called for %s CVR.  currently does nothing', amountWei);
         // convert sion depositted into usdc through redeem ****** ISSUE: we do NOT want to actually redeem sion here, just convert to usdc
-        _asset.approve(address(exchange), amountWei);
-        exchange.redeem(address(usdc), amountWei);
-        //  we then convert the USDC to CVR which is the underlying token of this vault
-        uint256 usdcBalance = usdc.balanceOf(address(this));
-        // approve the trasnfer of USDC to the universalLiquidator
-        usdc.approve(address(universalLiquidator), usdcBalance);
-        universalLiquidator.swap(
-                    address(usdc),
-                    address(cvr),
-                    1000000,
-                    0,
-                    address(this)
-                );
-        // then call the deposit function on the CaviarVault
-        caviarVault.deposit(amountWei, address(this));
-        return amountWei;
+       
 
     }
 

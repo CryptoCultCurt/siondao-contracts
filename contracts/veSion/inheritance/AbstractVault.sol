@@ -109,6 +109,7 @@ contract AbstractVault is
         console.log("transfering %s of token %s", amount, asset());
         console.log("from %s", sender);
         console.log("to %s", address(vaultManager));
+        IERC20Upgradeable(asset()).approve(address(vaultManager), amount);
         IERC20Upgradeable(asset()).safeTransferFrom(
             sender,
             address(vaultManager),

@@ -170,16 +170,17 @@ contract PortfolioManager is IPortfolioManager, Initializable, AccessControlUpgr
 
 
     function deposit() external override onlyExchanger cashStrategySet {
-
+        console.log('PM Deposit function - no parameters required');
         uint256 pmAssetBalance = asset.balanceOf(address(this));
         if (pmAssetBalance == 0) {
             // zero asset amount always fit in cash strategy but also zero stake result
             // so we can return now
             return;
         }
-
+        console.log('in pm deposit: pmAssetBalance', pmAssetBalance);
         // Stake all free asset amounts to cash Strategy
         asset.transfer(address(cashStrategy), pmAssetBalance);
+        console.log('asset transfered to cashStrategy. calling cashStrategy.stake');
         cashStrategy.stake(
             address(asset),
             pmAssetBalance

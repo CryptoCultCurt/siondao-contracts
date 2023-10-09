@@ -10,6 +10,8 @@ import "../libraries/OvnMath.sol";
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IControlRole.sol";
 
+import "hardhat/console.sol";
+
 
 abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     bytes32 public constant PORTFOLIO_MANAGER = keccak256("PORTFOLIO_MANAGER");
@@ -88,11 +90,12 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
         address _asset,
         uint256 _amount
     ) external override onlyPortfolioManager {
+        console.log('called stake');
 
         uint256 minNavExpected = OvnMath.subBasisPoints(this.netAssetValue(), navSlippageBP);
-
+        console.log('calling internal stake with minNavExpected', minNavExpected);
         _stake(_asset, IERC20(_asset).balanceOf(address(this)));
-
+        console.log('stake complete received', this.netAssetValue());
         require(this.netAssetValue() >= minNavExpected, "Strategy NAV less than expected");
 
         emit Stake(_amount);
@@ -114,6 +117,8 @@ abstract contract Strategy is IStrategy, Initializable, AccessControlUpgradeable
             withdrawAmount = _unstakeFull(_asset, _beneficiary);
         } else {
             withdrawAmount = _unstake(_asset, _amount, _beneficiary);
+            console.log('withdrawAmount', withdrawAmount);
+            console.log('amount', _amount);
             require(withdrawAmount >= _amount, 'Returned value less than requested amount');
         }
 

@@ -38,6 +38,7 @@ async function main() {
 
     await usdc.connect(signer).approve(exchange.address,"50000000000000000000000000");
     //await exchange.connect(signer).redeem(asset,amount);
+    console.log('calling mint on sion exchanger')
     await exchange.connect(signer).mint(params);
 
 

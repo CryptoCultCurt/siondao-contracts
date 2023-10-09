@@ -10,7 +10,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const pm = await ethers.getContract("PortfolioManager");
     const exchange = await ethers.getContract("Exchange");
 
-    const strategyAddr1 =  await ethers.getContract("StrategyStargateUsdc");
+    const strategyAddr1 =  await ethers.getContract("StrategyAaveV2");
     // const strategyAddr2 = await ethers.getContract("StrategyThenaUsdtUsdPlus");
     // const strategyAddr3 = await ethers.getContract("StrategyThenawUsdrUsdc");
     // const strategyAddr4 = await ethers.getContract("StrategyWombexBusd");
@@ -92,8 +92,15 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
 
     let agentRole = await pm.PORTFOLIO_AGENT_ROLE();
+    let agentRole2 = await strategyAddr1.PORTFOLIO_MANAGER();
     await (await pm.grantRole(agentRole, "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341")).wait();
-    await pm.addStrategy(strategyAddr1.address);
+    await (await pm.grantRole(agentRole2, "0xeccb9b9c6fb7590a4d0588953b3170a1a84e3341")).wait();
+
+    try {
+        await pm.addStrategy(strategyAddr1.address);
+    } catch(e) {
+        console.log('strategy was added previously or an errror occured');
+    }
 
     await (await pm.setCashStrategy(strategyAddr1.address)).wait();
     await (await pm.setStrategyWeights(weights)).wait();
@@ -151,5 +158,5 @@ module.exports = async ({getNamedAccounts, deployments}) => {
 
 };
 
-module.exports.tags = ['StrategyWeights'];
+module.exports.tags = ['sionsetting', 'StrategyWeights'];
 

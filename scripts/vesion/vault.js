@@ -99,7 +99,7 @@ async function main() {
     await sionVault.connect(signer).doHardWork();
   }
 
-  await purchase(ethers.utils.parseEther("100.0"));
+  await purchase(ethers.utils.parseEther("20.0"));
   await mine(4000);
 
 

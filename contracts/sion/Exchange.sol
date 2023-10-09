@@ -305,6 +305,10 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
      * @return Amount of minted Sion to caller
      */
     function _buy(address _asset, uint256 _amount, string memory _referral) internal returns (uint256) {
+        console.log('in exchange buy function');
+        console.log('asset', _asset);
+        console.log('amount', _amount);
+        console.log('referral', _referral); 
         require(_asset == address(usdc), "Only asset available for buy");
 
         uint256 currentBalance = usdc.balanceOf(msg.sender);
@@ -316,16 +320,18 @@ contract Exchange is Initializable, AccessControlUpgradeable, UUPSUpgradeable, P
         require(sionAmount > 0, "Amount of Sion is zero");
 
         uint256 _targetBalance = usdc.balanceOf(address(portfolioManager)) + _amount;
+        console.log('targetBalance', _targetBalance);
         usdc.transferFrom(msg.sender, address(portfolioManager), _amount);
         require(usdc.balanceOf(address(portfolioManager)) == _targetBalance, 'pm balance != target');
-
+        console.log('trannsferred to pm.  calling deposit on portfolio manager');
+        console.log('PM Address: ', address(portfolioManager));
         portfolioManager.deposit();
         _requireOncePerBlock(false);
 
         uint256 buyFeeAmount;
         uint256 buyAmount;
         (buyAmount, buyFeeAmount) = _takeFee(sionAmount, true);
-
+        console.log('calling sion mint');
         sion.mint(msg.sender, buyAmount);
 
         emit EventExchange("mint", buyAmount, buyFeeAmount, msg.sender, _referral);
