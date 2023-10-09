@@ -33,7 +33,7 @@ async function main() {
   let sionVault = await constants.getContract('SionVault', 'localhost');
   let sionVaultStrategy = await constants.getContract('SionVaultStrategy', 'localhost');
   let sionVaultManager = await constants.getContract('SionVaultManager', 'localhost');
-  let sionM2M = await constants.getContract('Mark2MarketVaults', 'localhost');
+  let sionM2M = await constants.getContract('SionVaultM2M', 'localhost');
 
   //let strategy = await constants.getContract('CaviarVaultStrategy', 'localhost');
   let rewardsVault = await constants.getContract('RewardsVault', 'localhost');

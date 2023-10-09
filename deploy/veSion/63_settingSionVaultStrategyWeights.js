@@ -31,5 +31,5 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
 };
 
-module.exports.tags = ['StrategyWeightsSionVault'];
+module.exports.tags = ['vesionsetting','StrategyWeightsSionVault'];
 
